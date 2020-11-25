@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         else
         {
             item->setText("Summary:");
-            item->setBackgroundColor(QColor(240, 240, 240));
+            item->setBackground(QBrush(QColor(240, 240, 240)));
         }
 
         ui->metricsTableWidget->insertRow(i);
@@ -98,7 +98,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         {
             QTableWidgetItem* newItem = new QTableWidgetItem();
             newItem->setTextAlignment(Qt::AlignCenter);
-            if (i == Language::NONE) newItem->setBackgroundColor(QColor(240, 240, 240));
+            if (i == Language::NONE) newItem->setBackground(QBrush(QColor(240, 240, 240)));
             ui->metricsTableWidget->setItem(i, j+1, newItem);
         }
     }
@@ -177,7 +177,7 @@ void MainWindow::slotCountButton()
         for (int j = 1; j < ui->metricsTableWidget->columnCount(); j++)
         {
             ui->metricsTableWidget->item(i, j)->setText(nullptr);
-            if (i != Language::NONE) ui->metricsTableWidget->item(i, j)->setBackgroundColor(QColor("White"));
+            if (i != Language::NONE) ui->metricsTableWidget->item(i, j)->setBackground(QBrush(QColor("White")));
         }
     }
 
@@ -251,22 +251,18 @@ void MainWindow::slotCountButton()
 
                     if (cursor == NONE)
                     {
-                        // Single Comment
-                        for (int k = 0; k < 16 && langList[lang].singleComment[k] != nullptr; k++)
+                        for (int k = 0; langList[lang].singleComment[k] || langList[lang].multipleCommentStart[k]; k++)
                         {
-                            if ((offset = CheckForKeyword(line, j, langList[lang].singleComment[k])))
+                            // Single Comment
+                            if (langList[lang].singleComment[k] && (offset = CheckForKeyword(line, j, langList[lang].singleComment[k])))
                             {
                                 j += offset;
                                 cursor = IN_SINGLE_COMMENT;
                                 isThereCommentLine = true;
                                 break;
                             }
-                        }
-
-                        // Multiple comment - begin
-                        for (int k = 0; k < 16 && langList[lang].multipleCommentStart[k] != nullptr; k++)
-                        {
-                            if ((offset = CheckForKeyword(line, j, langList[lang].multipleCommentStart[k])) && (lang != Language::RUBY || (j == 0 && !line[j + offset].isLetterOrNumber())))
+                            // Multiple comment - begin
+                            if (langList[lang].multipleCommentStart[k] && (offset = CheckForKeyword(line, j, langList[lang].multipleCommentStart[k])) && (lang != Language::RUBY || (j == 0 && !line[j + offset].isLetterOrNumber())))
                             {
                                 j += offset;
                                 cursor = IN_MULTIPLE_COMMENT;
@@ -274,24 +270,29 @@ void MainWindow::slotCountButton()
                                 break;
                             }
                         }
+
+                        if (j >= line.length()) break;
                     }
 
                     // Multiple comment - end
                     if (cursor == IN_MULTIPLE_COMMENT)
                     {
-                        for (int k = 0; k < 16 && langList[lang].multipleCommentEnd[k] != nullptr; k++)
+                        for (int k = 0; langList[lang].multipleCommentEnd[k]; k++)
                         {
                             if ((offset = CheckForKeyword(line, j, langList[lang].multipleCommentEnd[k])) && (lang != Language::RUBY || (j == 0 && !line[j + offset].isLetterOrNumber())))
                             {
                                 j += offset;
                                 cursor = NONE;
+                                isThereCommentLine = true;
                                 break;
                             }
                         }
+
+                        if (j >= line.length()) break;
                     }
 
                     // Comment words
-                    if ((cursor == IN_SINGLE_COMMENT || cursor == IN_MULTIPLE_COMMENT) && ((j == 0 && line[j].isLetter()) || (j && !line[j-1].isLetter() && line[j].isLetter())))
+                    if ((cursor == IN_SINGLE_COMMENT || cursor == IN_MULTIPLE_COMMENT) && ((j == 0 && line[j].isLetter()) || (j > 0 && !line[j-1].isLetter() && line[j].isLetter())))
                     {
                         dataCurrent[lang].commentWords++;
                         dataSum.commentWords++;
@@ -428,7 +429,7 @@ void MainWindow::slotSort(int column)
         ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 6)->setData(Qt::EditRole, dataCurrent[i].blankLines);
     }
 
-    ui->metricsTableWidget->sortByColumn(column);
+    ui->metricsTableWidget->sortByColumn(column, ui->metricsTableWidget->horizontalHeader()->sortIndicatorOrder());
 
     QTableWidgetItem *item = new QTableWidgetItem;
     ui->metricsTableWidget->insertRow(Language::NONE);
@@ -439,7 +440,7 @@ void MainWindow::slotSort(int column)
         QTableWidgetItem* newItem = new QTableWidgetItem();
         newItem->setText(temp[j]);
         if (j) newItem->setTextAlignment(Qt::AlignCenter);
-        newItem->setBackgroundColor(QColor(240, 240, 240));
+        newItem->setBackground(QBrush(QColor(240, 240, 240)));
         ui->metricsTableWidget->setItem(Language::NONE, j, newItem);
     }
 
@@ -451,7 +452,7 @@ void MainWindow::slotSort(int column)
 MainWindow::resizeEvent
 ===================
 */
-void MainWindow::resizeEvent(QResizeEvent *event)
+void MainWindow::resizeEvent(QResizeEvent *)
 {
     repaint();
     QApplication::processEvents();
@@ -465,6 +466,7 @@ MainWindow::CheckForKeyword
 int MainWindow::CheckForKeyword(const QString &line, int index, const char *keyword) const
 {
     int len = 0;
+    if (!keyword) return 0;
     while (keyword[len] != '\0') len++;
 
     if (index < 0 || index + len > line.length())
@@ -487,17 +489,17 @@ void MainWindow::MakeDiff(QTableWidgetItem *item, int current, int previous) con
     if (current > previous)
     {
         item->setText(QString("%1 (+%2)").arg(current).arg(current - previous));
-        item->setBackgroundColor(QColor(192, 255, 192));
+        item->setBackground(QBrush(QColor(192, 255, 192)));
     }
     else if (current < previous)
     {
         item->setText(QString("%1 (-%2)").arg(current).arg(previous - current));
-        item->setBackgroundColor(QColor(255, 192, 192));
+        item->setBackground(QBrush(QColor(255, 192, 192)));
     }
     else
     {
         item->setText(QString("%1").arg(current));
-        item->setBackgroundColor(QColor(255, 255, 255));
+        item->setBackground(QBrush(QColor(255, 255, 255)));
     }
 }
 

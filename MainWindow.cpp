@@ -245,7 +245,7 @@ void MainWindow::slotCountButton()
                     dataSum.blankLines++;
                 }
 
-                for (int i = 0; i < line.length(); i++)
+                for (int j = 0; j < line.length(); j++)
                 {
                     int offset;
 
@@ -254,9 +254,9 @@ void MainWindow::slotCountButton()
                         // Single Comment
                         for (int k = 0; k < 16 && langList[lang].singleComment[k] != nullptr; k++)
                         {
-                            if ((offset = CheckForKeyword(line, i, langList[lang].singleComment[k])))
+                            if ((offset = CheckForKeyword(line, j, langList[lang].singleComment[k])))
                             {
-                                i += offset;
+                                j += offset;
                                 cursor = IN_SINGLE_COMMENT;
                                 isThereCommentLine = true;
                                 break;
@@ -266,9 +266,9 @@ void MainWindow::slotCountButton()
                         // Multiple comment - begin
                         for (int k = 0; k < 16 && langList[lang].multipleCommentStart[k] != nullptr; k++)
                         {
-                            if ((offset = CheckForKeyword(line, i, langList[lang].multipleCommentStart[k])) && (lang != Language::RUBY || (i == 0 && !line[i + offset].isLetterOrNumber())))
+                            if ((offset = CheckForKeyword(line, j, langList[lang].multipleCommentStart[k])) && (lang != Language::RUBY || (j == 0 && !line[j + offset].isLetterOrNumber())))
                             {
-                                i += offset;
+                                j += offset;
                                 cursor = IN_MULTIPLE_COMMENT;
                                 isThereCommentLine = true;
                                 break;
@@ -281,9 +281,9 @@ void MainWindow::slotCountButton()
                     {
                         for (int k = 0; k < 16 && langList[lang].multipleCommentEnd[k] != nullptr; k++)
                         {
-                            if ((offset = CheckForKeyword(line, i, langList[lang].multipleCommentEnd[k])) && (lang != Language::RUBY || (i == 0 && !line[i + offset].isLetterOrNumber())))
+                            if ((offset = CheckForKeyword(line, j, langList[lang].multipleCommentEnd[k])) && (lang != Language::RUBY || (j == 0 && !line[j + offset].isLetterOrNumber())))
                             {
-                                i += offset;
+                                j += offset;
                                 cursor = NONE;
                                 break;
                             }
@@ -291,7 +291,7 @@ void MainWindow::slotCountButton()
                     }
 
                     // Comment words
-                    if ((cursor == IN_SINGLE_COMMENT || cursor == IN_MULTIPLE_COMMENT) && ((i == 0 && line[i].isLetter()) || (i && !line[i-1].isLetter() && line[i].isLetter())))
+                    if ((cursor == IN_SINGLE_COMMENT || cursor == IN_MULTIPLE_COMMENT) && ((j == 0 && line[j].isLetter()) || (j && !line[j-1].isLetter() && line[j].isLetter())))
                     {
                         dataCurrent[lang].commentWords++;
                         dataSum.commentWords++;
@@ -300,14 +300,14 @@ void MainWindow::slotCountButton()
                     if (cursor != IN_SINGLE_COMMENT && cursor != IN_MULTIPLE_COMMENT)
                     {
                         // Pure code
-                        if (line[i] >= '!' && line[i] <= '~') isTherePureCodeLine = true;
+                        if (line[j] >= '!' && line[j] <= '~') isTherePureCodeLine = true;
 
                         // Ignore comment symbols in string
-                        if (!CheckForKeyword(line, i - 1, "\\") && CheckForKeyword(line, i, "\"") && cursor != IN_C_STRING)
+                        if (!CheckForKeyword(line, j - 1, "\\") && CheckForKeyword(line, j, "\"") && cursor != IN_C_STRING)
                             cursor = (cursor == IN_STRING ? NONE : IN_STRING);
 
                         // Ignore comment symbols in character string
-                        if (!CheckForKeyword(line, i - 1, "\\") && CheckForKeyword(line, i, "\'") && cursor != IN_STRING)
+                        if (!CheckForKeyword(line, j - 1, "\\") && CheckForKeyword(line, j, "\'") && cursor != IN_STRING)
                             cursor = (cursor == IN_C_STRING ? NONE : IN_C_STRING);
                     }
                 }
@@ -386,14 +386,8 @@ void MainWindow::slotUpdateMetricsData()
 {
     if (counting) return;
 
-    MetricsData current;
-    MetricsData previous;
-
     for (int i = 0; i < Language::NONE; i++)
     {
-        current += dataCurrent[i];
-        previous += dataPrevious[i];
-
         MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 1), dataCurrent[i].sourceFiles, dataPrevious[i].sourceFiles);
         MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 2), dataCurrent[i].lines, dataPrevious[i].lines);
         MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 3), dataCurrent[i].linesOfCode, dataPrevious[i].linesOfCode);

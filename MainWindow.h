@@ -97,8 +97,6 @@ struct MetricsData
 {
     MetricsData() : sourceFiles(0), lines(0), linesOfCode(0), commentLines(0), commentWords(0), blankLines(0) {}
 
-    void operator +=(const MetricsData &other) { sourceFiles += other.sourceFiles; lines += other.lines; linesOfCode += other.linesOfCode; commentLines += other.commentLines; commentWords += other.commentWords; blankLines += other.blankLines; };
-
     int sourceFiles;
     int lines;
     int linesOfCode;

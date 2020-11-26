@@ -125,7 +125,6 @@ public slots:
 
     void slotBrowseButton();
     void slotCountButton();
-    void slotUpdateMetricsData();
     void slotSort(int column);
 
 protected:
@@ -133,8 +132,9 @@ protected:
 
 private:
 
-    int CheckForKeyword(const QString &line, int index, const char *keyword) const;
+    void UpdateMetricsDataDifference() const;
     void MakeDiff(QTableWidgetItem *item, int current, int previous) const;
+    int CheckForKeyword(const QString &line, int index, const char *keyword) const;
     Language::type_t GetLanguageType(const QString &ext) const;
     int GetTableIndex(Language::type_t index) const;
 

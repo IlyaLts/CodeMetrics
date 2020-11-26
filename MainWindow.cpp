@@ -27,6 +27,8 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
+#define NUMBER_OF_METRICS 7
+
 Language langList[Language::NONE] = {
 { Language::ASSEMBLY,    "Assembly",       {"//", ";", "%"},   {""},                   {""},                   {"asm", "s"}},
 { Language::C,           "C",              {"//"},             {"/*"},                 {"*/"},                 {"c"}},
@@ -94,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->metricsTableWidget->setItem(i, 0, item);
         ui->metricsTableWidget->hideRow(i);
 
-        for (int j = 0; j < 6; j++)
+        for (int j = 0; j < NUMBER_OF_METRICS-1; j++)
         {
             QTableWidgetItem* newItem = new QTableWidgetItem();
             newItem->setTextAlignment(Qt::AlignCenter);
@@ -190,7 +192,6 @@ void MainWindow::slotCountButton()
     {
         sourceDirectory.next();
 
-        // File
         if(sourceDirectory.fileInfo().isFile())
         {
             Language::type_t lang = GetLanguageType(sourceDirectory.fileInfo().completeSuffix());
@@ -226,7 +227,7 @@ void MainWindow::slotCountButton()
 
             cursorState_t cursor = NONE;
 
-            // Read file
+            // Read a file
             while (!in.atEnd())
             {
                 bool isThereCommentLine = (cursor == IN_MULTIPLE_COMMENT ? true : false);
@@ -245,6 +246,7 @@ void MainWindow::slotCountButton()
                     dataSum.blankLines++;
                 }
 
+                // Read a line
                 for (int j = 0; j < line.length(); j++)
                 {
                     int offset;
@@ -358,7 +360,7 @@ void MainWindow::slotCountButton()
     }
 
     counting = false;
-    slotUpdateMetricsData();
+    UpdateMetricsDataDifference();
 
     // Save all current metrics data for diff in the future
     for (int i = 0; i < Language::NONE; i++)
@@ -380,32 +382,12 @@ void MainWindow::slotCountButton()
 
 /*
 ===================
-MainWindow::slotUpdateMetricsData
-===================
-*/
-void MainWindow::slotUpdateMetricsData()
-{
-    if (counting) return;
-
-    for (int i = 0; i < Language::NONE; i++)
-    {
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 1), dataCurrent[i].sourceFiles, dataPrevious[i].sourceFiles);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 2), dataCurrent[i].lines, dataPrevious[i].lines);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 3), dataCurrent[i].linesOfCode, dataPrevious[i].linesOfCode);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 4), dataCurrent[i].commentLines, dataPrevious[i].commentLines);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 5), dataCurrent[i].commentWords, dataPrevious[i].commentWords);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 6), dataCurrent[i].blankLines, dataPrevious[i].blankLines);
-    }
-}
-
-/*
-===================
 MainWindow::slotSort
 ===================
 */
 void MainWindow::slotSort(int column)
 {
-    QString temp[7];
+    QString temp[NUMBER_OF_METRICS];
     bool flag = false;
 
     for (int i = 0; i < ui->metricsTableWidget->rowCount(); i++)
@@ -414,7 +396,7 @@ void MainWindow::slotSort(int column)
 
     if (!flag) return;
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < NUMBER_OF_METRICS; i++)
         temp[i] = ui->metricsTableWidget->item(Language::NONE, i)->text();
 
     ui->metricsTableWidget->removeRow(Language::NONE);
@@ -435,16 +417,16 @@ void MainWindow::slotSort(int column)
     ui->metricsTableWidget->insertRow(Language::NONE);
     ui->metricsTableWidget->setItem(Language::NONE, 0, item);
 
-    for (int j = 0; j < 7; j++)
+    for (int i = 0; i < NUMBER_OF_METRICS; i++)
     {
         QTableWidgetItem* newItem = new QTableWidgetItem();
-        newItem->setText(temp[j]);
-        if (j) newItem->setTextAlignment(Qt::AlignCenter);
+        newItem->setText(temp[i]);
+        if (i) newItem->setTextAlignment(Qt::AlignCenter);
         newItem->setBackground(QBrush(QColor(240, 240, 240)));
-        ui->metricsTableWidget->setItem(Language::NONE, j, newItem);
+        ui->metricsTableWidget->setItem(Language::NONE, i, newItem);
     }
 
-    slotUpdateMetricsData();
+    UpdateMetricsDataDifference();
 }
 
 /*
@@ -460,23 +442,22 @@ void MainWindow::resizeEvent(QResizeEvent *)
 
 /*
 ===================
-MainWindow::CheckForKeyword
+MainWindow::UpdateMetricsDataDifference
 ===================
 */
-int MainWindow::CheckForKeyword(const QString &line, int index, const char *keyword) const
+void MainWindow::UpdateMetricsDataDifference() const
 {
-    int len = 0;
-    if (!keyword) return 0;
-    while (keyword[len] != '\0') len++;
+    if (counting) return;
 
-    if (index < 0 || index + len > line.length())
-        return 0;
-
-    for (int i = 0; i < len; i++)
-        if (line[index + i] != keyword[i])
-            return 0;
-
-    return len;
+    for (int i = 0; i < Language::NONE; i++)
+    {
+        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 1), dataCurrent[i].sourceFiles, dataPrevious[i].sourceFiles);
+        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 2), dataCurrent[i].lines, dataPrevious[i].lines);
+        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 3), dataCurrent[i].linesOfCode, dataPrevious[i].linesOfCode);
+        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 4), dataCurrent[i].commentLines, dataPrevious[i].commentLines);
+        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 5), dataCurrent[i].commentWords, dataPrevious[i].commentWords);
+        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 6), dataCurrent[i].blankLines, dataPrevious[i].blankLines);
+    }
 }
 
 /*
@@ -505,13 +486,34 @@ void MainWindow::MakeDiff(QTableWidgetItem *item, int current, int previous) con
 
 /*
 ===================
+MainWindow::CheckForKeyword
+===================
+*/
+int MainWindow::CheckForKeyword(const QString &line, int index, const char *keyword) const
+{
+    int len = 0;
+    if (!keyword) return 0;
+    while (keyword[len] != '\0') len++;
+
+    if (index < 0 || index + len > line.length())
+        return 0;
+
+    for (int i = 0; i < len; i++)
+        if (line[index + i] != keyword[i])
+            return 0;
+
+    return len;
+}
+
+/*
+===================
 MainWindow::GetLanguageType
 ===================
 */
 Language::type_t MainWindow::GetLanguageType(const QString &ext) const
 {
     for (int i = 0; i < Language::NONE; i++)
-        for (int j = 0; j < 16 && langList[i].ext[j] != nullptr; j++)
+        for (int j = 0; langList[i].ext[j]; j++)
             if (!ext.compare(langList[i].ext[j], Qt::CaseInsensitive))
                 return (Language::type_t) i;
 

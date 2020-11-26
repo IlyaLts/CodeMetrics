@@ -30,10 +30,10 @@
 #define NUMBER_OF_METRICS 7
 
 Language langList[Language::NONE] = {
-{ Language::ASSEMBLY,    "Assembly",       {"//", ";", "%"},   {""},                   {""},                   {"asm", "s"}},
+{ Language::ASSEMBLY,    "Assembly",       {"//", ";", "%"},   {""},                   {""},                   {"asm", "nasm", "s"}},
 { Language::C,           "C",              {"//"},             {"/*"},                 {"*/"},                 {"c"}},
-{ Language::CPP,         "C++",            {"//"},             {"/*"},                 {"*/"},                 {"cpp", "cc", "cxx", "c++"}},
-{ Language::CHEADER,     "C/C++ Header",   {"//"},             {"/*"},                 {"*/"},                 {"h", "hh", "hpp", "h++", "hpp"}},
+{ Language::CPP,         "C++",            {"//"},             {"/*"},                 {"*/"},                 {"cpp", "cc", "cxx", "c++", "inl", "ipp"}},
+{ Language::CHEADER,     "C/C++ Header",   {"//"},             {"/*"},                 {"*/"},                 {"h", "hh", "hpp", "h++", "hpp", "hxx"}},
 { Language::OBJECTC,     "Object-C",       {"//"},             {"/*"},                 {"*/"},                 {"m", "mm"}},
 { Language::D,           "D",              {"//"},             {"/*", "/+"},           {"*/", "+/"},           {"d"}},
 { Language::JAVA,        "Java",           {"//"},             {"/*"},                 {"*/"},                 {"java"}},

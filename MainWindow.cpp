@@ -69,7 +69,7 @@ MainWindow::MainWindow
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     counting = false;
-    QSettings settings(SETTINGS_FILENAME, QSettings::IniFormat);
+    QSettings settings(QCoreApplication::applicationDirPath() + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
 
     ui->setupUi(this);
     ui->centralWidget->setLayout(ui->verticalLayout);
@@ -119,7 +119,7 @@ MainWindow::~MainWindow
 */
 MainWindow::~MainWindow()
 {
-    QSettings settings(SETTINGS_FILENAME, QSettings::IniFormat);
+    QSettings settings(QCoreApplication::applicationDirPath() + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
     settings.setValue("sourceCodeDirectory", ui->sourceCodeDirectoryLineEdit->text());
     settings.setValue("fullscreen", isMaximized());
 
@@ -150,7 +150,7 @@ MainWindow::slotCountButton
 */
 void MainWindow::slotCountButton()
 {
-    QSettings metricsList(PREVIOUS_METRICS_FILENAME, QSettings::IniFormat);
+    QSettings metricsList(QCoreApplication::applicationDirPath() + "/" + PREVIOUS_METRICS_FILENAME, QSettings::IniFormat);
     QList<SourceFile> filesList;
     MetricsData dataSum;
 

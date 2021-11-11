@@ -17,19 +17,29 @@
 ===============================================================================
 */
 
-#include "MainWindow.h"
-#include <QApplication>
+#ifndef DIRFIRSTPROXYMODEL_H
+#define DIRFIRSTPROXYMODEL_H
+
+#include <QSortFilterProxyModel>
 
 /*
-===================
-main
-===================
-*/
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+===========================================================
 
-    return a.exec();
-}
+    DirsFirstProxyModel
+
+===========================================================
+*/
+class DirsFirstProxyModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+
+public:
+
+    DirsFirstProxyModel(QObject *parent = nullptr) : QSortFilterProxyModel(parent){};
+
+protected:
+
+    bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
+};
+
+#endif // DIRFIRSTPROXYMODEL_H

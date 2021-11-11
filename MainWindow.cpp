@@ -1,6 +1,6 @@
 /*
 ===============================================================================
-    Copyright (C) 2015-2017 Ilya Lyakhovets
+    Copyright (C) 2015-2021 Ilya Lyakhovets
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,20 +17,25 @@
 ===============================================================================
 */
 
-#include <QSettings>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QDirIterator>
 #include <QFile>
+#include <QDirIterator>
 #include <QTextStream>
+#include <QFileIconProvider>
+#include <QStringListModel>
+#include <QSettings>
+#include <QStandardPaths>
+#include <QCloseEvent>
 
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
+#include "DirsFirstProxyModel.h"
+#include "FileSelectorModel.h"
+#include "ProjectsList.h"
 
 #define NUMBER_OF_METRICS 7
 
 Language langList[Language::NONE] = {
-{ Language::ASSEMBLY,    "Assembly",       {"//", ";", "%"},   {""},                   {""},                   {"asm", "nasm", "s"}},
+{ Language::ASSEMBLY,    "Assembly",       {"//", ";", "#"},   {"/*"},                 {"*/"},                 {"asm", "nasm", "s"}},
 { Language::C,           "C",              {"//"},             {"/*"},                 {"*/"},                 {"c"}},
 { Language::CPP,         "C++",            {"//"},             {"/*"},                 {"*/"},                 {"cpp", "cc", "cxx", "c++", "inl", "ipp"}},
 { Language::CHEADER,     "C/C++ Header",   {"//"},             {"/*"},                 {"*/"},                 {"h", "hh", "hpp", "h++", "hpp", "hxx"}},
@@ -49,17 +54,19 @@ Language langList[Language::NONE] = {
 { Language::LISP,        "Lisp",           {"//"},             {"#|"},                 {"|#"},                 {"lisp"}},
 { Language::PYTHON,      "Python",         {"#"},              {"\"\"\"", "\'\'\'"},   {"\"\"\"", "\'\'\'"},   {"py"}},
 { Language::KOTLIN,      "Kotlin",         {"//"},             {"/*"},                 {"*/"},                 {"kt", "kts"}},
-{ Language::CLOJURE,     "Clojure",        {";"},              {""},                   {""},                   {"clj", "cljs", "cljc", "edn"}},
+{ Language::CLOJURE,     "Clojure",        {";"},              {},                     {},                     {"clj", "cljs", "cljc", "edn"}},
 { Language::TYPESCRIPT,  "TypeScript",     {"//"},             {"/*"},                 {"*/"},                 {"ts", "tsx"}},
 { Language::COFFEESCRIPT,"CoffeeScript",   {"#"},              {"###"},                {"###"},                {"coffee", "litcoffee"}},
 { Language::HASKELL,     "Haskell",        {"--"},             {"{-"},                 {"-}"},                 {"hs", "lhs"}},
 { Language::RUBY,        "Ruby",           {"#"},              {"=begin"},             {"=end"},               {"rb", "rbw"}},
-{ Language::R,           "R",              {"#"},              {""},                   {""},                   {"r"}},
-{ Language::PERL,        "Perl",           {"#"},              {""},                   {""},                   {"pl", "pm", "perl", "t", "pod"}},
+{ Language::R,           "R",              {"#"},              {},                     {},                     {"r"}},
+{ Language::PERL,        "Perl",           {"#"},              {},                     {},                     {"pl", "pm", "perl", "t", "pod"}},
 { Language::JAVASCRIPT,  "JavaScript",     {"//"},             {"/*"},                 {"*/"},                 {"js", "json"}},
 { Language::PHP,         "PHP",            {"#"},              {"/*"},                 {"*/"},                 {"php", "phtml", "php3", "php4", "php5", "phps"}},
 { Language::PASCAL,      "Pascal",         {"//"},             {"(*", "{"},            {"*)", "}"},            {"pas", "p"}},
-{ Language::BASIC,       "BASIC",          {"\\"},             {""},                   {""},                   {"bas", "vb"}}};
+{ Language::GLSL,        "GLSL",           {"//"},             {"/*"},                 {"*/"},                 {"vert", "tesc", "tese", "geom", "frag", "comp", "glsl", "glslv"}},
+{ Language::HLSL,        "HLSL",           {"//"},             {"/*"},                 {"*/"},                 {"hlsl"}},
+{ Language::BASIC,       "BASIC",          {"'", "REM"},       {},                     {},                     {"bas", "vb"}}};
 
 /*
 ===================
@@ -68,48 +75,88 @@ MainWindow::MainWindow
 */
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    counting = false;
-    QSettings settings(QCoreApplication::applicationDirPath() + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
+    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
 
     ui->setupUi(this);
-    ui->centralWidget->setLayout(ui->verticalLayout);
+    ui->centralWidget->setLayout(ui->mainLayout);
     setWindowTitle(QString("Code Metrics"));
     setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
-    resize(QSize(settings.value("width", 800).toInt(), settings.value("height", 400).toInt()));
-    setWindowState(settings.value("fullscreen", false).toBool() ? Qt::WindowMaximized : Qt::WindowActive);
-    ui->sourceCodeDirectoryLineEdit->setText(settings.value("sourceCodeDirectory").toString());
+    resize(QSize(settings.value("Width", 800).toInt(), settings.value("Height", 400).toInt()));
+    setWindowState(settings.value("Fullscreen", false).toBool() ? Qt::WindowMaximized : Qt::WindowActive);
 
-    for (int i = 0; i <= Language::NONE; i++)
+    QVariantList hList = settings.value("HorizontalSplitter", QVariantList({ui->projectsLayout->minimumSize().width(), 999999})).value<QVariantList>();
+    QVariantList vList = settings.value("VerticalSplitter", QVariantList({ui->verticalSplitter->height() / 2, ui->verticalSplitter->height() / 2})).value<QVariantList>();
+
+    QList<int> hSizes, vSizes;
+    for (auto &variant : hList) hSizes.push_back(variant.toInt());
+    for (auto &variant : vList) vSizes.push_back(variant.toInt());
+
+    ui->horizontalSplitter->setSizes(hSizes);
+    ui->verticalSplitter->setSizes(vSizes);
+
+    ui->horizontalSplitter->setStretchFactor(0, 0);
+    ui->horizontalSplitter->setStretchFactor(1, 1);
+
+    projectsListModel = new QStringListModel;
+    ui->projectsList->setModel(projectsListModel);
+
+    fileSelectorModel = new FileSelectorModel(this);
+    fileSelectorModel->setIconProvider(new QFileIconProvider);
+    fileSelectorModel->setReadOnly(true);
+    fileSelectorModel->setFilter(QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+    fileSelectorModel->setRootPath(QDir::currentPath());
+
+    proxyModel = new DirsFirstProxyModel(this);
+    proxyModel->setSourceModel(fileSelectorModel);
+
+    ui->fileSelector->setModel(proxyModel);
+    proxyModel->sort(0, Qt::AscendingOrder);
+    ui->fileSelector->header()->setSizeAdjustPolicy(QHeaderView::AdjustToContents);
+    ui->fileSelector->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->fileSelector->header()->adjustSize();
+
+    ui->metricsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    for (int i = 0; i < Language::NONE + 1; i++)
     {
         QTableWidgetItem *item = new QTableWidgetItem();
-        if (i < Language::NONE)
+
+        if (i != Language::NONE)
         {
             item->setText(QString(langList[i].name));
+            item->setData(Qt::UserRole, i);
         }
         else
         {
-            item->setText("Summary:");
+            item->setText("Total:");
             item->setBackground(QBrush(QColor(240, 240, 240)));
         }
 
-        ui->metricsTableWidget->insertRow(i);
-        ui->metricsTableWidget->setItem(i, 0, item);
-        ui->metricsTableWidget->hideRow(i);
+        ui->metricsTable->insertRow(i);
+        ui->metricsTable->setItem(i, 0, item);
+        ui->metricsTable->hideRow(i);
 
-        for (int j = 0; j < NUMBER_OF_METRICS-1; j++)
+        for (int j = 1; j < NUMBER_OF_METRICS; j++)
         {
             QTableWidgetItem* newItem = new QTableWidgetItem();
             newItem->setTextAlignment(Qt::AlignCenter);
             if (i == Language::NONE) newItem->setBackground(QBrush(QColor(240, 240, 240)));
-            ui->metricsTableWidget->setItem(i, j+1, newItem);
+            ui->metricsTable->setItem(i, j, newItem);
         }
     }
 
-    ui->metricsTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    QSettings projects(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + PROJECTS_FILENAME, QSettings::IniFormat);
+    projectNames = projects.allKeys();
+    for (auto &name : projectNames) projectPathList.push_back(projects.value(name).toStringList());
+    projectsListModel->setStringList(projectNames);
 
-    connect(ui->browseButton, SIGNAL(clicked()), SLOT(slotBrowseButton()));
-    connect(ui->countButton, SIGNAL(clicked()), SLOT(slotCountButton()));
-    connect(ui->metricsTableWidget->horizontalHeader(), SIGNAL(sectionClicked(int)), SLOT(slotSort(int)));
+    connect(ui->addButton, SIGNAL(clicked()), SLOT(addProject()));
+    connect(ui->removeButton, SIGNAL(clicked()), SLOT(removeProject()));
+    connect(ui->countButton, SIGNAL(clicked()), SLOT(count()));
+    connect(ui->metricsTable->horizontalHeader(), SIGNAL(sectionClicked(int)), SLOT(sort(int)));
+    connect(ui->projectsList->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), SLOT(projectClicked(QItemSelection, QItemSelection)));
+    connect(ui->projectsList->model(), SIGNAL(dataChanged(QModelIndex, QModelIndex, QList<int>)), SLOT(projectNameChanged(QModelIndex)));
+    connect(ui->projectsList, SIGNAL(deletePressed()), SLOT(removeProject()));
 }
 
 /*
@@ -119,155 +166,302 @@ MainWindow::~MainWindow
 */
 MainWindow::~MainWindow()
 {
-    QSettings settings(QCoreApplication::applicationDirPath() + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
-    settings.setValue("sourceCodeDirectory", ui->sourceCodeDirectoryLineEdit->text());
-    settings.setValue("fullscreen", isMaximized());
-
-    if (!isMaximized())
-    {
-        settings.setValue("width", size().width());
-        settings.setValue("height", size().height());
-    }
-
     delete ui;
 }
 
 /*
 ===================
-MainWindow::slotBrowseButton
+MainWindow::addProject
 ===================
 */
-void MainWindow::slotBrowseButton()
+void MainWindow::addProject()
 {
-    QString filename = QFileDialog::getExistingDirectory(this, "Browse For Folder", ui->sourceCodeDirectoryLineEdit->text(), QFileDialog::ShowDirsOnly);
-    if (!filename.isEmpty()) ui->sourceCodeDirectoryLineEdit->setText(filename);
+    QString newName("New project");
+    QStringList pathList;
+    fileSelectorModel->getPathList(pathList);
+
+    if (pathList.isEmpty()) return;
+
+    for (int i = 2; projectNames.contains(newName); i++)
+        newName = QString("New project (%1)").arg(i);
+
+    projectNames.push_back(newName);
+    projectPathList.push_back(pathList);
+
+    QStringList stringList(projectsListModel->stringList());
+    stringList.push_back(newName);
+    projectsListModel->setStringList(stringList);
+
+    ui->projectsList->selectionModel()->blockSignals(true);
+    ui->projectsList->setCurrentIndex(ui->projectsList->model()->index(ui->projectsList->model()->rowCount() - 1, 0));
+    ui->projectsList->selectionModel()->blockSignals(false);
 }
 
 /*
 ===================
-MainWindow::slotCountButton
+MainWindow::removeProject
 ===================
 */
-void MainWindow::slotCountButton()
+void MainWindow::removeProject()
 {
-    QSettings metricsList(QCoreApplication::applicationDirPath() + "/" + PREVIOUS_METRICS_FILENAME, QSettings::IniFormat);
-    QList<SourceFile> filesList;
-    MetricsData dataSum;
+    if (ui->projectsList->selectionModel()->selectedIndexes().isEmpty()) return;
 
-    // Strip whitespaces and '/', '\\' characters at the end of path
-    QString path = ui->sourceCodeDirectoryLineEdit->text();
-    while (path.size() && path[0] == ' ') path.remove(0, 1);
-    while (path.size() && (path[path.size() - 1] == '/' || path[path.size() - 1] == '\\')) path.remove(path.size() - 1, 1);
-    ui->sourceCodeDirectoryLineEdit->setText(path);
+    for (auto &index : ui->projectsList->selectionModel()->selectedIndexes())
+    {
+        int currentRow = index.row();
 
-    if (path.isEmpty())
+        ui->projectsList->model()->removeRow(currentRow);
+
+        QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
+
+        // Removes project metrics
+        for (int i = 0; i < Language::NONE; i++)
+        {
+            metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i));
+            metricsData.remove(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i));
+            metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i));
+            metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i));
+            metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i));
+            metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i));
+        }
+
+        projectNames.removeAt(currentRow);
+        projectPathList.removeAt(currentRow);
+    }
+
+    fileSelectorModel->setData(fileSelectorModel->index(0, 0, QModelIndex()), Qt::Unchecked, Qt::CheckStateRole);
+    ui->fileSelector->collapseAll();
+    ui->projectsList->selectionModel()->reset();
+}
+
+/*
+===================
+MainWindow::projectClicked
+===================
+*/
+void MainWindow::projectClicked(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    if (selected.indexes().isEmpty())
+    {
+        for (int i = 0; i < fileSelectorModel->rowCount(); i++)
+            fileSelectorModel->setData(fileSelectorModel->index(i, 0, QModelIndex()), Qt::Unchecked, Qt::CheckStateRole);
+
+        ui->fileSelector->collapseAll();
         return;
+    }
+
+    // Saves path list of a previously selected project
+    for (auto &index : deselected.indexes())
+    {
+        QStringList pathList;
+        fileSelectorModel->getPathList(pathList);
+        projectPathList[index.row()] = pathList;
+    }
+
+    fileSelectorModel->setChecked(projectPathList[ui->projectsList->currentIndex().row()]);
+    ui->fileSelector->collapseAll();
+
+    for (auto &path : projectPathList[ui->projectsList->currentIndex().row()])
+    {
+        QModelIndex curIndex = fileSelectorModel->index(path).parent();
+
+        while (curIndex.isValid())
+        {
+            ui->fileSelector->expand(proxyModel->mapFromSource(curIndex));
+            curIndex = curIndex.parent();
+        }
+    }
+}
+
+/*
+===================
+MainWindow::projectNameChanged
+===================
+*/
+void MainWindow::projectNameChanged(const QModelIndex &index)
+{
+    QString newName = index.data(Qt::DisplayRole).toString();
+    newName.remove('/');
+    newName.remove('\\');
+    int currentRow = index.row();
+
+    // Sets its name back to original if there's the project name that already exists
+    if (newName.isEmpty() || projectNames.contains(newName, Qt::CaseInsensitive))
+    {
+        ui->projectsList->model()->setData(index, projectNames[currentRow], Qt::DisplayRole);
+        return;
+    }
+
+    QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
+
+    // Saves metrics data with a new project name.
+    for (int i = 0; i < Language::NONE; i++)
+    {
+        MetricsData data;
+
+        data.sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i), -1).toInt();
+        data.lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i), -1).toInt();
+        data.linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i), -1).toInt();
+        data.commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i), -1).toInt();
+        data.commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i), -1).toInt();
+        data.blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i), -1).toInt();
+
+        if (data.sourceFiles >= 0) metricsData.setValue(QString("%1-%2-SourceFiles").arg(newName).arg(i), data.sourceFiles);
+        if (data.lines >= 0) metricsData.setValue(QString("%1-%2-Lines").arg(newName).arg(i), data.lines);
+        if (data.linesOfCode >= 0) metricsData.setValue(QString("%1-%2-LinesOfCode").arg(newName).arg(i), data.linesOfCode);
+        if (data.commentLines >= 0) metricsData.setValue(QString("%1-%2-CommentLines").arg(newName).arg(i), data.commentLines);
+        if (data.commentWords >= 0) metricsData.setValue(QString("%1-%2-CommentWords").arg(newName).arg(i), data.commentWords);
+        if (data.blankLines >= 0) metricsData.setValue(QString("%1-%2-BlankLines").arg(newName).arg(i), data.blankLines);
+
+        metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i));
+        metricsData.remove(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i));
+        metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i));
+        metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i));
+        metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i));
+        metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i));
+    }
+
+    projectNames[index.row()] = newName;
+}
+
+/*
+===================
+MainWindow::count
+===================
+*/
+void MainWindow::count()
+{
+    QList<SourceFile> filesList;
+    MetricsData dataTotal;
 
     // Widgets are off
-    counting = true;
-    ui->sourceCodeDirectoryLineEdit->setReadOnly(true);
-    ui->browseButton->setEnabled(false);
+    ui->projectsList->setEnabled(false);
+    ui->fileSelector->setEnabled(false);
+    ui->addButton->setEnabled(false);
+    ui->removeButton->setEnabled(false);
     ui->countButton->setEnabled(false);
+    counting = true;
 
-    // Reset all metrics data
+    // Resets all metrics data
     ui->progressBar->setValue(0);
+    memset(&dataCurrent, 0, sizeof(MetricsData) * Language::NONE);
 
-    for (int i = 0; i < ui->metricsTableWidget->rowCount(); i++)
+    for (int i = 0; i < ui->metricsTable->rowCount(); i++)
     {
-        ui->metricsTableWidget->hideRow(i);
+        ui->metricsTable->hideRow(i);
 
-        for (int j = 1; j < ui->metricsTableWidget->columnCount(); j++)
+        for (int j = 1; j < ui->metricsTable->columnCount(); j++)
         {
-            ui->metricsTableWidget->item(i, j)->setText(nullptr);
-            if (i != Language::NONE) ui->metricsTableWidget->item(i, j)->setBackground(QBrush(QColor("White")));
+            ui->metricsTable->item(i, j)->setText(QString());
+            if (i != Language::NONE) ui->metricsTable->item(i, j)->setBackground(QBrush(QColor("White")));
         }
     }
 
-    memset(&dataCurrent, 0, sizeof(MetricsData) * Language::NONE);
-
-    // Count files
     ui->progressBar->setFormat("Counting files...");
-    QDirIterator sourceDirectory(path, QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-    while (sourceDirectory.hasNext())
+
+    QList<QString> pathList;
+    fileSelectorModel->getPathList(pathList);
+
+    // Counts files
+    for (auto &path : pathList)
     {
-        sourceDirectory.next();
+        QFileInfo fileInfo(path);
+        if (!fileInfo.exists()) continue;
 
-        if(sourceDirectory.fileInfo().isFile())
+        auto AddPath = [&](const QString &path, const QString &ext)
         {
-            Language::type_t lang = GetLanguageType(sourceDirectory.fileInfo().completeSuffix());
+            Language::type_t langType = getLanguageType(ext);
 
-            if (lang != Language::NONE)
+            if (langType != Language::NONE)
             {
-                filesList.append(SourceFile(sourceDirectory.fileInfo().filePath(), lang));
-                ui->metricsTableWidget->showRow(GetTableIndex(lang));
-                ui->metricsTableWidget->showRow(Language::NONE);
-                dataCurrent[lang].sourceFiles++;
-                dataSum.sourceFiles++;
-                ui->metricsTableWidget->item(GetTableIndex(lang), 1)->setData(Qt::EditRole, dataCurrent[lang].sourceFiles);
-                ui->metricsTableWidget->item(Language::NONE, 1)->setData(Qt::EditRole, dataSum.sourceFiles);
+                int row = getMetricsTableIndex(langType);
+
+                filesList.append(SourceFile(path, langType));
+                dataCurrent[langType].sourceFiles++;
+                dataTotal.sourceFiles++;
+                ui->metricsTable->showRow(row);
+                ui->metricsTable->showRow(Language::NONE);
+                ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[langType].sourceFiles);
+                ui->metricsTable->item(Language::NONE, 1)->setData(Qt::EditRole, dataTotal.sourceFiles);
+                QApplication::processEvents();
+            }
+        };
+
+        if (fileInfo.isFile())
+        {
+            AddPath(path, fileInfo.completeSuffix());
+        }
+        else if (fileInfo.isDir())
+        {
+            QDirIterator sourceDirectory(path, QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+
+            while (sourceDirectory.hasNext())
+            {
+                sourceDirectory.next();
+
+                if(sourceDirectory.fileInfo().isFile())
+                    AddPath(sourceDirectory.fileInfo().filePath(), sourceDirectory.fileInfo().completeSuffix());
             }
         }
-
-        QApplication::processEvents();
     }
 
     ui->progressBar->setFormat("%p%");
 
-    // Count source lines
+    // Counts source lines
     for (int i = 0, files = 0; i < filesList.size(); i++)
     {
         Language::type_t lang = filesList[i].lang;
 
-        // File
         if (lang != Language::NONE)
         {
             QFile file(filesList[i].filename);
             file.open(QIODevice::ReadOnly);
+            if (!file.isOpen()) continue;
             QTextStream in(&file);
 
-            cursorState_t cursor = NONE;
+            cursorState_t cursorState = NONE;
 
-            // Read a file
+            // Reads a file
             while (!in.atEnd())
             {
-                bool isThereCommentLine = (cursor == IN_MULTIPLE_COMMENT ? true : false);
-                bool isTherePureCodeLine = false;
+                bool isThereCommentLine = (cursorState == MULTIPLE_COMMENT ? true : false);
+                bool isThereCodeLine = false;
+                bool narrowLiteral = false;
 
                 QString line = in.readLine();
-                cursor = isThereCommentLine ? IN_MULTIPLE_COMMENT : NONE;
+                cursorState = isThereCommentLine ? MULTIPLE_COMMENT : NONE;
 
                 dataCurrent[lang].lines++;
-                dataSum.lines++;
+                dataTotal.lines++;
 
                 // Blank line
                 if (line.simplified().isEmpty())
                 {
                     dataCurrent[lang].blankLines++;
-                    dataSum.blankLines++;
+                    dataTotal.blankLines++;
                 }
 
-                // Read a line
+                // Reads a line
                 for (int j = 0; j < line.length(); j++)
                 {
-                    int offset;
-
-                    if (cursor == NONE)
+                    if (cursorState == NONE)
                     {
                         for (int k = 0; langList[lang].singleComment[k] || langList[lang].multipleCommentStart[k]; k++)
                         {
                             // Single Comment
-                            if (langList[lang].singleComment[k] && (offset = CheckForKeyword(line, j, langList[lang].singleComment[k])))
+                            if (langList[lang].singleComment[k] && checkForKeyword(line, j, langList[lang].singleComment[k]))
                             {
-                                j += offset;
-                                cursor = IN_SINGLE_COMMENT;
+                                j += strlen(langList[lang].singleComment[k]);
+                                cursorState = SINGLE_COMMENT;
                                 isThereCommentLine = true;
                                 break;
                             }
+
                             // Multiple comment - begin
-                            if (langList[lang].multipleCommentStart[k] && (offset = CheckForKeyword(line, j, langList[lang].multipleCommentStart[k])) && (lang != Language::RUBY || (j == 0 && !line[j + offset].isLetterOrNumber())))
+                            if (cursorState == NONE && langList[lang].multipleCommentStart[k] && checkForKeyword(line, j, langList[lang].multipleCommentStart[k]) && (lang != Language::RUBY || (j == 0 && !line[j + strlen(langList[lang].multipleCommentStart[k])].isLetterOrNumber())))
                             {
-                                j += offset;
-                                cursor = IN_MULTIPLE_COMMENT;
+                                j += strlen(langList[lang].multipleCommentStart[k]);
+                                cursorState = MULTIPLE_COMMENT;
                                 isThereCommentLine = true;
                                 break;
                             }
@@ -277,14 +471,14 @@ void MainWindow::slotCountButton()
                     }
 
                     // Multiple comment - end
-                    if (cursor == IN_MULTIPLE_COMMENT)
+                    if (cursorState == MULTIPLE_COMMENT)
                     {
                         for (int k = 0; langList[lang].multipleCommentEnd[k]; k++)
                         {
-                            if ((offset = CheckForKeyword(line, j, langList[lang].multipleCommentEnd[k])) && (lang != Language::RUBY || (j == 0 && !line[j + offset].isLetterOrNumber())))
+                            if (checkForKeyword(line, j, langList[lang].multipleCommentEnd[k]) && (lang != Language::RUBY || (j == 0 && !line[j + strlen(langList[lang].multipleCommentEnd[k])].isLetterOrNumber())))
                             {
-                                j += offset;
-                                cursor = NONE;
+                                j += strlen(langList[lang].multipleCommentEnd[k]);
+                                cursorState = NONE;
                                 isThereCommentLine = true;
                                 break;
                             }
@@ -294,36 +488,45 @@ void MainWindow::slotCountButton()
                     }
 
                     // Comment words
-                    if ((cursor == IN_SINGLE_COMMENT || cursor == IN_MULTIPLE_COMMENT) && ((j == 0 && line[j].isLetter()) || (j > 0 && !line[j-1].isLetter() && line[j].isLetter())))
+                    if ((cursorState == SINGLE_COMMENT || cursorState == MULTIPLE_COMMENT) && ((j == 0 && line[j].isLetter()) || (j > 0 && !line[j - 1].isLetter() && line[j].isLetter())))
                     {
                         dataCurrent[lang].commentWords++;
-                        dataSum.commentWords++;
+                        dataTotal.commentWords++;
                     }
 
-                    if (cursor != IN_SINGLE_COMMENT && cursor != IN_MULTIPLE_COMMENT)
+                    if (cursorState != SINGLE_COMMENT && cursorState != MULTIPLE_COMMENT)
                     {
-                        // Pure code
-                        if (line[j] >= '!' && line[j] <= '~') isTherePureCodeLine = true;
+                        // A line of code
+                        if (line[j] >= '!' && line[j] <= '~') isThereCodeLine = true;
 
-                        // Ignore comment symbols in string
-                        if (!CheckForKeyword(line, j - 1, "\\") && CheckForKeyword(line, j, "\"") && cursor != IN_C_STRING)
-                            cursor = (cursor == IN_STRING ? NONE : IN_STRING);
+                        // String literal
+                        if (cursorState != CHARACTER_LITERAL && !narrowLiteral && checkForKeyword(line, j, "\""))
+                            cursorState = (cursorState == STRING_LITERAL ? NONE : STRING_LITERAL);
 
-                        // Ignore comment symbols in character string
-                        if (!CheckForKeyword(line, j - 1, "\\") && CheckForKeyword(line, j, "\'") && cursor != IN_STRING)
-                            cursor = (cursor == IN_C_STRING ? NONE : IN_C_STRING);
+                        // Character literal
+                        if (cursorState != STRING_LITERAL && !narrowLiteral && checkForKeyword(line, j, "\'"))
+                            cursorState = (cursorState == CHARACTER_LITERAL ? NONE : CHARACTER_LITERAL);
+
+                        // Narrow character literal
+                        if (cursorState == CHARACTER_LITERAL || cursorState == STRING_LITERAL)
+                        {
+                            if (checkForKeyword(line, j, "\\"))
+                                narrowLiteral = !narrowLiteral;
+                            else
+                                narrowLiteral = false;
+                        }
                     }
                 }
 
                 if (isThereCommentLine)
                 {
                     dataCurrent[lang].commentLines++;
-                    dataSum.commentLines++;
+                    dataTotal.commentLines++;
                 }
-                if (isTherePureCodeLine)
+                if (isThereCodeLine)
                 {
                     dataCurrent[lang].linesOfCode++;
-                    dataSum.linesOfCode++;
+                    dataTotal.linesOfCode++;
                 }
             }
 
@@ -332,101 +535,112 @@ void MainWindow::slotCountButton()
             files++;
             ui->progressBar->setValue((float) files / filesList.size() * 100);
 
-            ui->metricsTableWidget->item(GetTableIndex(lang), 2)->setData(Qt::EditRole, dataCurrent[lang].lines);
-            ui->metricsTableWidget->item(GetTableIndex(lang), 3)->setData(Qt::EditRole, dataCurrent[lang].linesOfCode);
-            ui->metricsTableWidget->item(GetTableIndex(lang), 4)->setData(Qt::EditRole, dataCurrent[lang].commentLines);
-            ui->metricsTableWidget->item(GetTableIndex(lang), 5)->setData(Qt::EditRole, dataCurrent[lang].commentWords);
-            ui->metricsTableWidget->item(GetTableIndex(lang), 6)->setData(Qt::EditRole, dataCurrent[lang].blankLines);
+            int row = getMetricsTableIndex(lang);
 
-            ui->metricsTableWidget->item(Language::NONE, 2)->setData(Qt::EditRole, dataSum.lines);
-            ui->metricsTableWidget->item(Language::NONE, 3)->setData(Qt::EditRole, dataSum.linesOfCode);
-            ui->metricsTableWidget->item(Language::NONE, 4)->setData(Qt::EditRole, dataSum.commentLines);
-            ui->metricsTableWidget->item(Language::NONE, 5)->setData(Qt::EditRole, dataSum.commentWords);
-            ui->metricsTableWidget->item(Language::NONE, 6)->setData(Qt::EditRole, dataSum.blankLines);
+            ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[lang].lines);
+            ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[lang].linesOfCode);
+            ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[lang].commentLines);
+            ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[lang].commentWords);
+            ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[lang].blankLines);
+
+            ui->metricsTable->item(Language::NONE, 2)->setData(Qt::EditRole, dataTotal.lines);
+            ui->metricsTable->item(Language::NONE, 3)->setData(Qt::EditRole, dataTotal.linesOfCode);
+            ui->metricsTable->item(Language::NONE, 4)->setData(Qt::EditRole, dataTotal.commentLines);
+            ui->metricsTable->item(Language::NONE, 5)->setData(Qt::EditRole, dataTotal.commentWords);
+            ui->metricsTable->item(Language::NONE, 6)->setData(Qt::EditRole, dataTotal.blankLines);
         }
 
         QApplication::processEvents();
     }
 
-    // Read all previous metrics data
-    for (int i = 0; i < Language::NONE; i++)
+    QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
+    int currentRow = ui->projectsList->currentIndex().row();
+
+    if (ui->projectsList->selectionModel()->isSelected(ui->projectsList->currentIndex()))
     {
-        dataPrevious[i].sourceFiles = metricsList.value(QString("%1_%2_SourceFiles").arg(path).arg(i), dataCurrent[i].sourceFiles).toInt();
-        dataPrevious[i].lines = metricsList.value(QString("%1_%2_Lines").arg(path).arg(i), dataCurrent[i].lines).toInt();
-        dataPrevious[i].linesOfCode = metricsList.value(QString("%1_%2_LinesOfCode").arg(path).arg(i), dataCurrent[i].linesOfCode).toInt();
-        dataPrevious[i].commentLines = metricsList.value(QString("%1_%2_CommentLines").arg(path).arg(i), dataCurrent[i].commentLines).toInt();
-        dataPrevious[i].commentWords = metricsList.value(QString("%1_%2_CommentWords").arg(path).arg(i), dataCurrent[i].commentWords).toInt();
-        dataPrevious[i].blankLines = metricsList.value(QString("%1_%2_BlankLines").arg(path).arg(i), dataCurrent[i].blankLines).toInt();
+        // Reads/saves previous metrics
+        for (int i = 0; i < Language::NONE; i++)
+        {
+            dataPrevious[i].sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i), dataCurrent[i].sourceFiles).toInt();
+            dataPrevious[i].lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].lines).toInt();
+            dataPrevious[i].linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i), dataCurrent[i].linesOfCode).toInt();
+            dataPrevious[i].commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentLines).toInt();
+            dataPrevious[i].commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentWords).toInt();
+            dataPrevious[i].blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].blankLines).toInt();
+
+            metricsData.setValue(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i), dataCurrent[i].sourceFiles);
+            metricsData.setValue(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].lines);
+            metricsData.setValue(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i), dataCurrent[i].linesOfCode);
+            metricsData.setValue(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentLines);
+            metricsData.setValue(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentWords);
+            metricsData.setValue(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].blankLines);
+        }
+
+        updateMetricsDifference();
     }
 
-    counting = false;
-    UpdateMetricsDataDifference();
-
-    // Save all current metrics data for diff in the future
-    for (int i = 0; i < Language::NONE; i++)
-    {
-        metricsList.setValue(QString("%1_%2_SourceFiles").arg(path).arg(i), dataCurrent[i].sourceFiles);
-        metricsList.setValue(QString("%1_%2_Lines").arg(path).arg(i), dataCurrent[i].lines);
-        metricsList.setValue(QString("%1_%2_LinesOfCode").arg(path).arg(i), dataCurrent[i].linesOfCode);
-        metricsList.setValue(QString("%1_%2_CommentLines").arg(path).arg(i), dataCurrent[i].commentLines);
-        metricsList.setValue(QString("%1_%2_CommentWords").arg(path).arg(i), dataCurrent[i].commentWords);
-        metricsList.setValue(QString("%1_%2_BlankLines").arg(path).arg(i), dataCurrent[i].blankLines);
-    }
+    if (!filesList.isEmpty())
+        ui->progressBar->setFormat("Done.");
+    else
+        ui->progressBar->setFormat("No source files have been found!");
 
     // Widgets are on
-    ui->progressBar->setFormat("Done.");
-    ui->sourceCodeDirectoryLineEdit->setReadOnly(false);
-    ui->browseButton->setEnabled(true);
+    ui->projectsList->setEnabled(true);
+    ui->fileSelector->setEnabled(true);
+    ui->addButton->setEnabled(true);
+    ui->removeButton->setEnabled(true);
     ui->countButton->setEnabled(true);
+    counting = false;
 }
 
 /*
 ===================
-MainWindow::slotSort
+MainWindow::sort
 ===================
 */
-void MainWindow::slotSort(int column)
+void MainWindow::sort(int column)
 {
-    QString temp[NUMBER_OF_METRICS];
+    QString totalData[NUMBER_OF_METRICS];
+
+    // Doesn't allow sorting if there're no shown rows.
     bool flag = false;
 
-    for (int i = 0; i < ui->metricsTableWidget->rowCount(); i++)
-        if (!ui->metricsTableWidget->isRowHidden(i))
+    for (int i = 0; i < ui->metricsTable->rowCount(); i++)
+        if (!ui->metricsTable->isRowHidden(i))
             flag = true;
 
     if (!flag) return;
 
-    for (int i = 0; i < NUMBER_OF_METRICS; i++)
-        temp[i] = ui->metricsTableWidget->item(Language::NONE, i)->text();
-
-    ui->metricsTableWidget->removeRow(Language::NONE);
-
+    // Removes metrics differences for accurate sorting.
     for (int i = 0; i < Language::NONE; i++)
     {
-        ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 1)->setData(Qt::EditRole, dataCurrent[i].sourceFiles);
-        ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 2)->setData(Qt::EditRole, dataCurrent[i].lines);
-        ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 3)->setData(Qt::EditRole, dataCurrent[i].linesOfCode);
-        ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 4)->setData(Qt::EditRole, dataCurrent[i].commentLines);
-        ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 5)->setData(Qt::EditRole, dataCurrent[i].commentWords);
-        ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 6)->setData(Qt::EditRole, dataCurrent[i].blankLines);
+        int row = getMetricsTableIndex((Language::type_t) i);
+
+        ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[i].sourceFiles);
+        ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[i].lines);
+        ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[i].linesOfCode);
+        ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[i].commentLines);
+        ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[i].commentWords);
+        ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[i].blankLines);
     }
 
-    ui->metricsTableWidget->sortByColumn(column, ui->metricsTableWidget->horizontalHeader()->sortIndicatorOrder());
+    for (int i = 0; i < NUMBER_OF_METRICS; i++)
+        totalData[i] = ui->metricsTable->item(Language::NONE, i)->text();
 
-    QTableWidgetItem *item = new QTableWidgetItem;
-    ui->metricsTableWidget->insertRow(Language::NONE);
-    ui->metricsTableWidget->setItem(Language::NONE, 0, item);
+    ui->metricsTable->removeRow(Language::NONE);
+    ui->metricsTable->sortByColumn(column, ui->metricsTable->horizontalHeader()->sortIndicatorOrder());
+    ui->metricsTable->insertRow(Language::NONE);
 
     for (int i = 0; i < NUMBER_OF_METRICS; i++)
     {
-        QTableWidgetItem* newItem = new QTableWidgetItem();
-        newItem->setText(temp[i]);
-        if (i) newItem->setTextAlignment(Qt::AlignCenter);
-        newItem->setBackground(QBrush(QColor(240, 240, 240)));
-        ui->metricsTableWidget->setItem(Language::NONE, i, newItem);
+        QTableWidgetItem* totalItem = new QTableWidgetItem();
+        totalItem->setText(totalData[i]);
+        totalItem->setBackground(QBrush(QColor(240, 240, 240)));
+        if (i) totalItem->setTextAlignment(Qt::AlignCenter);
+        ui->metricsTable->setItem(Language::NONE, i, totalItem);
     }
 
-    UpdateMetricsDataDifference();
+    if (!counting) updateMetricsDifference();
 }
 
 /*
@@ -442,30 +656,69 @@ void MainWindow::resizeEvent(QResizeEvent *)
 
 /*
 ===================
-MainWindow::UpdateMetricsDataDifference
+MainWindow::closeEvent
 ===================
 */
-void MainWindow::UpdateMetricsDataDifference() const
+void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (counting) return;
+    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
+    QVariantList hSizes, vSizes;
 
+    for (auto &e : ui->horizontalSplitter->sizes()) hSizes.push_back(e);
+    for (auto &e : ui->verticalSplitter->sizes()) vSizes.push_back(e);
+
+    settings.setValue("HorizontalSplitter", hSizes);
+    settings.setValue("VerticalSplitter", vSizes);
+    settings.setValue("Fullscreen", isMaximized());
+
+    if (!isMaximized())
+    {
+        settings.setValue("Width", size().width());
+        settings.setValue("Height", size().height());
+    }
+
+    QSettings projects(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + PROJECTS_FILENAME, QSettings::IniFormat);
+    projects.clear();
+
+    if (!ui->projectsList->selectionModel()->selectedIndexes().isEmpty())
+    {
+        QStringList pathList;
+        fileSelectorModel->getPathList(pathList);
+        projectPathList[ui->projectsList->currentIndex().row()] = pathList;
+    }
+
+    for (int i = 0; i < projectNames.size(); i++)
+        projects.setValue(projectNames[i], projectPathList[i]);
+
+    event->accept();
+}
+
+/*
+===================
+MainWindow::updateMetricsDifference
+===================
+*/
+void MainWindow::updateMetricsDifference() const
+{
     for (int i = 0; i < Language::NONE; i++)
     {
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 1), dataCurrent[i].sourceFiles, dataPrevious[i].sourceFiles);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 2), dataCurrent[i].lines, dataPrevious[i].lines);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 3), dataCurrent[i].linesOfCode, dataPrevious[i].linesOfCode);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 4), dataCurrent[i].commentLines, dataPrevious[i].commentLines);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 5), dataCurrent[i].commentWords, dataPrevious[i].commentWords);
-        MakeDiff(ui->metricsTableWidget->item(GetTableIndex((Language::type_t) i), 6), dataCurrent[i].blankLines, dataPrevious[i].blankLines);
+        int row = getMetricsTableIndex((Language::type_t) i);
+
+        showDifference(ui->metricsTable->item(row, 1), dataCurrent[i].sourceFiles, dataPrevious[i].sourceFiles);
+        showDifference(ui->metricsTable->item(row, 2), dataCurrent[i].lines, dataPrevious[i].lines);
+        showDifference(ui->metricsTable->item(row, 3), dataCurrent[i].linesOfCode, dataPrevious[i].linesOfCode);
+        showDifference(ui->metricsTable->item(row, 4), dataCurrent[i].commentLines, dataPrevious[i].commentLines);
+        showDifference(ui->metricsTable->item(row, 5), dataCurrent[i].commentWords, dataPrevious[i].commentWords);
+        showDifference(ui->metricsTable->item(row, 6), dataCurrent[i].blankLines, dataPrevious[i].blankLines);
     }
 }
 
 /*
 ===================
-MainWindow::MakeDiff
+MainWindow::showDifference
 ===================
 */
-void MainWindow::MakeDiff(QTableWidgetItem *item, int current, int previous) const
+void MainWindow::showDifference(QTableWidgetItem *item, int current, int previous) const
 {
     if (current > previous)
     {
@@ -486,31 +739,30 @@ void MainWindow::MakeDiff(QTableWidgetItem *item, int current, int previous) con
 
 /*
 ===================
-MainWindow::CheckForKeyword
+MainWindow::checkForKeyword
 ===================
 */
-int MainWindow::CheckForKeyword(const QString &line, int index, const char *keyword) const
+bool MainWindow::checkForKeyword(const QString &line, int index, const char *keyword) const
 {
     int len = 0;
-    if (!keyword) return 0;
     while (keyword[len] != '\0') len++;
 
-    if (index < 0 || index + len > line.length())
-        return 0;
+    if (len <= 0 || index < 0 || index + len > line.length())
+        return false;
 
     for (int i = 0; i < len; i++)
         if (line[index + i] != keyword[i])
-            return 0;
+            return false;
 
-    return len;
+    return true;
 }
 
 /*
 ===================
-MainWindow::GetLanguageType
+MainWindow::getLanguageType
 ===================
 */
-Language::type_t MainWindow::GetLanguageType(const QString &ext) const
+Language::type_t MainWindow::getLanguageType(const QString &ext) const
 {
     for (int i = 0; i < Language::NONE; i++)
         for (int j = 0; langList[i].ext[j]; j++)
@@ -522,13 +774,13 @@ Language::type_t MainWindow::GetLanguageType(const QString &ext) const
 
 /*
 ===================
-MainWindow::GetTableIndex
+MainWindow::getMetricsTableIndex
 ===================
 */
-int MainWindow::GetTableIndex(Language::type_t type) const
+int MainWindow::getMetricsTableIndex(Language::type_t type) const
 {
-    for (int i = 0; i < Language::NONE; i++)
-        if (!QString::compare(langList[(int) type].name, ui->metricsTableWidget->item(i, 0)->text(), Qt::CaseInsensitive))
+    for (int i = 0; i < ui->metricsTable->rowCount(); i++)
+        if (ui->metricsTable->item(i, 0)->data(Qt::UserRole).toInt() == type)
             return i;
 
     return -1;

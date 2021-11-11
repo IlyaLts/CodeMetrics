@@ -12,10 +12,16 @@ TARGET = CodeMetrics
 TEMPLATE = app
 
 SOURCES +=\
+    DirsFirstProxyModel.cpp \
+    FileSelectorModel.cpp \
         MainWindow.cpp \
-    Main.cpp
+    Main.cpp \
+    ProjectsList.cpp
 
-HEADERS  += MainWindow.h
+HEADERS  += MainWindow.h \
+    DirsFirstProxyModel.h \
+    FileSelectorModel.h \
+    ProjectsList.h
 
 FORMS    += MainWindow.ui
 

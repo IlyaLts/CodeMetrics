@@ -1,6 +1,6 @@
 /*
 ===============================================================================
-    Copyright (C) 2015-2017 Ilya Lyakhovets
+    Copyright (C) 2015-2021 Ilya Lyakhovets
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,24 +21,29 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "FileSelectorModel.h"
 
-#define CODE_METRICS_VERSION "1.7"
 #define SETTINGS_FILENAME "Settings.ini"
-#define PREVIOUS_METRICS_FILENAME "PreviousMetrics.dat"
+#define PROJECTS_FILENAME "Projects.ini"
+#define METRICS_FILENAME "Metrics.ini"
 
 namespace Ui {
 class MainWindow;
 }
 
 class QTableWidgetItem;
+class QStringListModel;
+class QItemSelection;
+class ProjectsList;
+class DirsFirstProxyModel;
 
 enum cursorState_t
 {
-    NONE,
-    IN_STRING,
-    IN_C_STRING,
-    IN_SINGLE_COMMENT,
-    IN_MULTIPLE_COMMENT
+    STRING_LITERAL,
+    CHARACTER_LITERAL,
+    SINGLE_COMMENT,
+    MULTIPLE_COMMENT,
+    NONE
 };
 
 struct Language
@@ -75,6 +80,8 @@ struct Language
         PHP,
         PASCAL,
         BASIC,
+        GLSL,
+        HLSL,
         NONE
     } type;
 
@@ -121,27 +128,39 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-public slots:
+public Q_SLOTS:
 
-    void slotBrowseButton();
-    void slotCountButton();
-    void slotSort(int column);
+    void addProject();
+    void removeProject();
+    void projectClicked(const QItemSelection &selected, const QItemSelection &deselected);
+    void projectNameChanged(const QModelIndex &index);
+    void count();
+    void sort(int column);
 
 protected:
-    void resizeEvent(QResizeEvent *event);
+
+    void resizeEvent(QResizeEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private:
 
-    void UpdateMetricsDataDifference() const;
-    void MakeDiff(QTableWidgetItem *item, int current, int previous) const;
-    int CheckForKeyword(const QString &line, int index, const char *keyword) const;
-    Language::type_t GetLanguageType(const QString &ext) const;
-    int GetTableIndex(Language::type_t index) const;
+    void updateMetricsDifference() const;
+    void showDifference(QTableWidgetItem *item, int current, int previous) const;
+    bool checkForKeyword(const QString &line, int index, const char *keyword) const;
+    Language::type_t getLanguageType(const QString &ext) const;
+    int getMetricsTableIndex(Language::type_t index) const;
 
     bool counting;
     Ui::MainWindow *ui;
+    QStringListModel *projectsListModel;
+    FileSelectorModel *fileSelectorModel;
+    DirsFirstProxyModel *proxyModel;
+    QStringList projectNames;
+    QList<QStringList> projectPathList;
     MetricsData dataCurrent[Language::NONE];
     MetricsData dataPrevious[Language::NONE];
+
+    ProjectsList *projectsList;
 };
 
 #endif // MAINWINDOW_H

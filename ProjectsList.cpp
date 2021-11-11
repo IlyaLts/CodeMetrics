@@ -17,19 +17,32 @@
 ===============================================================================
 */
 
-#include "MainWindow.h"
-#include <QApplication>
+#include "ProjectsList.h"
+#include <QMouseEvent>
 
 /*
 ===================
-main
+ProjectsList::mousePressEvent
 ===================
 */
-int main(int argc, char *argv[])
+void ProjectsList::mousePressEvent(QMouseEvent *event)
 {
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+    QModelIndex item = indexAt(event->pos());
+    QListView::mousePressEvent(event);
 
-    return a.exec();
+    // Clears selection when a user clicks on an empty area
+    if (!item.isValid()) clearSelection();
+}
+
+/*
+===================
+ProjectsList::keyPressEvent
+===================
+*/
+void ProjectsList::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Delete && selectionModel()->selectedIndexes().size())
+        emit deletePressed();
+
+    QListView::keyPressEvent(event);
 }

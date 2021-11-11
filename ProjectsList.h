@@ -17,19 +17,34 @@
 ===============================================================================
 */
 
-#include "MainWindow.h"
-#include <QApplication>
+#ifndef PROJECTSLIST_H
+#define PROJECTSLIST_H
+
+#include <QListView>
 
 /*
-===================
-main
-===================
-*/
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+===========================================================
 
-    return a.exec();
-}
+    ProjectsList
+
+===========================================================
+*/
+class ProjectsList : public QListView
+{
+    Q_OBJECT
+
+public:
+
+    ProjectsList(QWidget *parent = nullptr) : QListView(parent){};
+
+Q_SIGNALS:
+
+    void deletePressed();
+
+protected:
+
+    void mousePressEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+};
+
+#endif // PROJECTSLIST_H

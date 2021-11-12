@@ -176,11 +176,12 @@ MainWindow::addProject
 */
 void MainWindow::addProject()
 {
-    QString newName("New project");
     QStringList pathList;
     fileSelectorModel->getPathList(pathList);
 
     if (pathList.isEmpty()) return;
+
+    QString newName("New project");
 
     for (int i = 2; projectNames.contains(newName); i++)
         newName = QString("New project (%1)").arg(i);
@@ -192,6 +193,7 @@ void MainWindow::addProject()
     stringList.push_back(newName);
     projectsListModel->setStringList(stringList);
 
+    // Avoids reloading a newly added project as it's already loaded.
     ui->projectsList->selectionModel()->blockSignals(true);
     ui->projectsList->setCurrentIndex(ui->projectsList->model()->index(ui->projectsList->model()->rowCount() - 1, 0));
     ui->projectsList->selectionModel()->blockSignals(false);
@@ -241,12 +243,14 @@ MainWindow::projectClicked
 */
 void MainWindow::projectClicked(const QItemSelection &selected, const QItemSelection &deselected)
 {
+    ui->fileSelector->collapseAll();
+
+    // Resets file selector when a user clicks on an empty area
     if (selected.indexes().isEmpty())
     {
         for (int i = 0; i < fileSelectorModel->rowCount(); i++)
             fileSelectorModel->setData(fileSelectorModel->index(i, 0, QModelIndex()), Qt::Unchecked, Qt::CheckStateRole);
 
-        ui->fileSelector->collapseAll();
         return;
     }
 
@@ -259,8 +263,8 @@ void MainWindow::projectClicked(const QItemSelection &selected, const QItemSelec
     }
 
     fileSelectorModel->setChecked(projectPathList[ui->projectsList->currentIndex().row()]);
-    ui->fileSelector->collapseAll();
 
+    // Expands all directories with checked checkboxes
     for (auto &path : projectPathList[ui->projectsList->currentIndex().row()])
     {
         QModelIndex curIndex = fileSelectorModel->index(path).parent();
@@ -283,12 +287,12 @@ void MainWindow::projectNameChanged(const QModelIndex &index)
     QString newName = index.data(Qt::DisplayRole).toString();
     newName.remove('/');
     newName.remove('\\');
-    int currentRow = index.row();
+    int row = index.row();
 
     // Sets its name back to original if there's the project name that already exists
     if (newName.isEmpty() || projectNames.contains(newName, Qt::CaseInsensitive))
     {
-        ui->projectsList->model()->setData(index, projectNames[currentRow], Qt::DisplayRole);
+        ui->projectsList->model()->setData(index, projectNames[row], Qt::DisplayRole);
         return;
     }
 
@@ -299,12 +303,12 @@ void MainWindow::projectNameChanged(const QModelIndex &index)
     {
         MetricsData data;
 
-        data.sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i), -1).toInt();
-        data.lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i), -1).toInt();
-        data.linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i), -1).toInt();
-        data.commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i), -1).toInt();
-        data.commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i), -1).toInt();
-        data.blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i), -1).toInt();
+        data.sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[row]).arg(i), -1).toInt();
+        data.lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[row]).arg(i), -1).toInt();
+        data.linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[row]).arg(i), -1).toInt();
+        data.commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[row]).arg(i), -1).toInt();
+        data.commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[row]).arg(i), -1).toInt();
+        data.blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[row]).arg(i), -1).toInt();
 
         if (data.sourceFiles >= 0) metricsData.setValue(QString("%1-%2-SourceFiles").arg(newName).arg(i), data.sourceFiles);
         if (data.lines >= 0) metricsData.setValue(QString("%1-%2-Lines").arg(newName).arg(i), data.lines);
@@ -313,15 +317,15 @@ void MainWindow::projectNameChanged(const QModelIndex &index)
         if (data.commentWords >= 0) metricsData.setValue(QString("%1-%2-CommentWords").arg(newName).arg(i), data.commentWords);
         if (data.blankLines >= 0) metricsData.setValue(QString("%1-%2-BlankLines").arg(newName).arg(i), data.blankLines);
 
-        metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i));
-        metricsData.remove(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i));
-        metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i));
-        metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i));
-        metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i));
-        metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i));
+        metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[row]).arg(i));
+        metricsData.remove(QString("%1-%2-Lines").arg(projectNames[row]).arg(i));
+        metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[row]).arg(i));
+        metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[row]).arg(i));
+        metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[row]).arg(i));
+        metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[row]).arg(i));
     }
 
-    projectNames[index.row()] = newName;
+    projectNames[row] = newName;
 }
 
 /*
@@ -702,7 +706,7 @@ void MainWindow::updateMetricsDifference() const
 {
     for (int i = 0; i < Language::NONE; i++)
     {
-        int row = getMetricsTableIndex((Language::type_t) i);
+        int row = getMetricsTableIndex(static_cast<Language::type_t>(i));
 
         showDifference(ui->metricsTable->item(row, 1), dataCurrent[i].sourceFiles, dataPrevious[i].sourceFiles);
         showDifference(ui->metricsTable->item(row, 2), dataCurrent[i].lines, dataPrevious[i].lines);
@@ -767,7 +771,7 @@ Language::type_t MainWindow::getLanguageType(const QString &ext) const
     for (int i = 0; i < Language::NONE; i++)
         for (int j = 0; langList[i].ext[j]; j++)
             if (!ext.compare(langList[i].ext[j], Qt::CaseInsensitive))
-                return (Language::type_t) i;
+                return static_cast<Language::type_t>(i);
 
     return Language::NONE;
 }

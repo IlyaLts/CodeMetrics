@@ -34,39 +34,39 @@
 
 #define NUMBER_OF_METRICS 7
 
-Language langList[Language::NONE] = {
+Language langList[Language::COUNT] = {
 { Language::ASSEMBLY,    "Assembly",       {"//", ";", "#"},   {"/*"},                 {"*/"},                 {"asm", "nasm", "s"}},
+{ Language::BASIC,       "BASIC",          {"'", "REM"},       {},                     {},                     {"bas", "vb"}},
 { Language::C,           "C",              {"//"},             {"/*"},                 {"*/"},                 {"c"}},
+{ Language::CSHARP,      "C#",             {"//"},             {"/*"},                 {"*/"},                 {"cs"}},
 { Language::CPP,         "C++",            {"//"},             {"/*"},                 {"*/"},                 {"cpp", "cc", "cxx", "c++", "inl", "ipp"}},
 { Language::CHEADER,     "C/C++ Header",   {"//"},             {"/*"},                 {"*/"},                 {"h", "hh", "hpp", "h++", "hpp", "hxx"}},
-{ Language::OBJECTC,     "Object-C",       {"//"},             {"/*"},                 {"*/"},                 {"m", "mm"}},
+{ Language::CLOJURE,     "Clojure",        {";"},              {},                     {},                     {"clj", "cljs", "cljc", "edn"}},
+{ Language::COFFEESCRIPT,"CoffeeScript",   {"#"},              {"###"},                {"###"},                {"coffee", "litcoffee"}},
 { Language::D,           "D",              {"//"},             {"/*", "/+"},           {"*/", "+/"},           {"d"}},
-{ Language::JAVA,        "Java",           {"//"},             {"/*"},                 {"*/"},                 {"java"}},
-{ Language::CSHARP,      "C#",             {"//"},             {"/*"},                 {"*/"},                 {"cs"}},
 { Language::FSHARP,      "F#",             {"//"},             {"/*", "(*"},           {"*/", "*)"},           {"fs" "fsx"}},
-{ Language::SWIFT,       "Swift",          {"//"},             {"/*"},                 {"*/"},                 {"swift"}},
-{ Language::LUA,         "Lua",            {"--"},             {"/*", "--[["},         {"*/", "]]"},           {"lua"}},
+{ Language::GLSL,        "GLSL",           {"//"},             {"/*"},                 {"*/"},                 {"vert", "tesc", "tese", "geom", "frag", "comp", "glsl", "glslv"}},
 { Language::GO,          "Go",             {"//"},             {"/*"},                 {"*/"},                 {"go"}},
+{ Language::GROOVY,      "Groovy",         {"//"},             {"/*"},                 {"*/"},                 {"groovy", "gvy", "gy", "gsh"}},
+{ Language::HASKELL,     "Haskell",        {"--"},             {"{-"},                 {"-}"},                 {"hs", "lhs"}},
+{ Language::HLSL,        "HLSL",           {"//"},             {"/*"},                 {"*/"},                 {"hlsl"}},
+{ Language::JAVA,        "Java",           {"//"},             {"/*"},                 {"*/"},                 {"java"}},
+{ Language::JAVASCRIPT,  "JavaScript",     {"//"},             {"/*"},                 {"*/"},                 {"js", "json"}},
+{ Language::KOTLIN,      "Kotlin",         {"//"},             {"/*"},                 {"*/"},                 {"kt", "kts"}},
+{ Language::LISP,        "Lisp",           {"//"},             {"#|"},                 {"|#"},                 {"lisp"}},
+{ Language::LUA,         "Lua",            {"--"},             {"/*", "--[["},         {"*/", "]]"},           {"lua"}},
+{ Language::OBJECTC,     "Object-C",       {"//"},             {"/*"},                 {"*/"},                 {"m", "mm"}},
+{ Language::PERL,        "Perl",           {"#"},              {},                     {},                     {"pl", "pm", "perl", "t", "pod"}},
+{ Language::PASCAL,      "Pascal",         {"//"},             {"(*", "{"},            {"*)", "}"},            {"pas", "p"}},
+{ Language::PHP,         "PHP",            {"#"},              {"/*"},                 {"*/"},                 {"php", "phtml", "php3", "php4", "php5", "phps"}},
+{ Language::PYTHON,      "Python",         {"#"},              {"\"\"\"", "\'\'\'"},   {"\"\"\"", "\'\'\'"},   {"py"}},
+{ Language::R,           "R",              {"#"},              {},                     {},                     {"r"}},
+{ Language::RUBY,        "Ruby",           {"#"},              {"=begin"},             {"=end"},               {"rb", "rbw"}},
 { Language::RUST,        "Rust",           {"//"},             {"/*"},                 {"*/"},                 {"rs"}},
 { Language::SCALA,       "Scala",          {"//"},             {"/*"},                 {"*/"},                 {"scala"}},
-{ Language::GROOVY,      "Groovy",         {"//"},             {"/*"},                 {"*/"},                 {"groovy", "gvy", "gy", "gsh"}},
 { Language::SQL,         "SQL",            {"#", "--"},        {"/*"},                 {"*/"},                 {"sql"}},
-{ Language::LISP,        "Lisp",           {"//"},             {"#|"},                 {"|#"},                 {"lisp"}},
-{ Language::PYTHON,      "Python",         {"#"},              {"\"\"\"", "\'\'\'"},   {"\"\"\"", "\'\'\'"},   {"py"}},
-{ Language::KOTLIN,      "Kotlin",         {"//"},             {"/*"},                 {"*/"},                 {"kt", "kts"}},
-{ Language::CLOJURE,     "Clojure",        {";"},              {},                     {},                     {"clj", "cljs", "cljc", "edn"}},
-{ Language::TYPESCRIPT,  "TypeScript",     {"//"},             {"/*"},                 {"*/"},                 {"ts", "tsx"}},
-{ Language::COFFEESCRIPT,"CoffeeScript",   {"#"},              {"###"},                {"###"},                {"coffee", "litcoffee"}},
-{ Language::HASKELL,     "Haskell",        {"--"},             {"{-"},                 {"-}"},                 {"hs", "lhs"}},
-{ Language::RUBY,        "Ruby",           {"#"},              {"=begin"},             {"=end"},               {"rb", "rbw"}},
-{ Language::R,           "R",              {"#"},              {},                     {},                     {"r"}},
-{ Language::PERL,        "Perl",           {"#"},              {},                     {},                     {"pl", "pm", "perl", "t", "pod"}},
-{ Language::JAVASCRIPT,  "JavaScript",     {"//"},             {"/*"},                 {"*/"},                 {"js", "json"}},
-{ Language::PHP,         "PHP",            {"#"},              {"/*"},                 {"*/"},                 {"php", "phtml", "php3", "php4", "php5", "phps"}},
-{ Language::PASCAL,      "Pascal",         {"//"},             {"(*", "{"},            {"*)", "}"},            {"pas", "p"}},
-{ Language::GLSL,        "GLSL",           {"//"},             {"/*"},                 {"*/"},                 {"vert", "tesc", "tese", "geom", "frag", "comp", "glsl", "glslv"}},
-{ Language::HLSL,        "HLSL",           {"//"},             {"/*"},                 {"*/"},                 {"hlsl"}},
-{ Language::BASIC,       "BASIC",          {"'", "REM"},       {},                     {},                     {"bas", "vb"}}};
+{ Language::SWIFT,       "Swift",          {"//"},             {"/*"},                 {"*/"},                 {"swift"}},
+{ Language::TYPESCRIPT,  "TypeScript",     {"//"},             {"/*"},                 {"*/"},                 {"ts", "tsx"}}};
 
 /*
 ===================
@@ -117,11 +117,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     ui->metricsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
-    for (int i = 0; i < Language::NONE + 1; i++)
+    for (int i = 0; i < Language::COUNT + 1; i++)
     {
         QTableWidgetItem *item = new QTableWidgetItem();
 
-        if (i != Language::NONE)
+        if (i != Language::COUNT)
         {
             item->setText(QString(langList[i].name));
             item->setData(Qt::UserRole, i);
@@ -140,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         {
             QTableWidgetItem* newItem = new QTableWidgetItem();
             newItem->setTextAlignment(Qt::AlignCenter);
-            if (i == Language::NONE) newItem->setBackground(QBrush(QColor(240, 240, 240)));
+            if (i == Language::COUNT) newItem->setBackground(QBrush(QColor(240, 240, 240)));
             ui->metricsTable->setItem(i, j, newItem);
         }
     }
@@ -217,14 +217,17 @@ void MainWindow::removeProject()
         QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
 
         // Removes project metrics
-        for (int i = 0; i < Language::NONE; i++)
+        for (int i = 0; i < Language::COUNT; i++)
         {
-            metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i));
-            metricsData.remove(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i));
-            metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i));
-            metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i));
-            metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i));
-            metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i));
+            QString langName = langList[i].name;
+            langName.replace('/', ' ');
+
+            metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName));
+            metricsData.remove(QString("%1-%2-Lines").arg(projectNames[currentRow], langName));
+            metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow], langName));
+            metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[currentRow], langName));
+            metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[currentRow], langName));
+            metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[currentRow], langName));
         }
 
         projectNames.removeAt(currentRow);
@@ -299,30 +302,33 @@ void MainWindow::projectNameChanged(const QModelIndex &index)
     QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
 
     // Saves metrics data with a new project name.
-    for (int i = 0; i < Language::NONE; i++)
+    for (int i = 0; i < Language::COUNT; i++)
     {
         MetricsData data;
 
-        data.sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[row]).arg(i), -1).toInt();
-        data.lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[row]).arg(i), -1).toInt();
-        data.linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[row]).arg(i), -1).toInt();
-        data.commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[row]).arg(i), -1).toInt();
-        data.commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[row]).arg(i), -1).toInt();
-        data.blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[row]).arg(i), -1).toInt();
+        QString langName = langList[i].name;
+        langName.replace('/', ' ');
 
-        if (data.sourceFiles >= 0) metricsData.setValue(QString("%1-%2-SourceFiles").arg(newName).arg(i), data.sourceFiles);
-        if (data.lines >= 0) metricsData.setValue(QString("%1-%2-Lines").arg(newName).arg(i), data.lines);
-        if (data.linesOfCode >= 0) metricsData.setValue(QString("%1-%2-LinesOfCode").arg(newName).arg(i), data.linesOfCode);
-        if (data.commentLines >= 0) metricsData.setValue(QString("%1-%2-CommentLines").arg(newName).arg(i), data.commentLines);
-        if (data.commentWords >= 0) metricsData.setValue(QString("%1-%2-CommentWords").arg(newName).arg(i), data.commentWords);
-        if (data.blankLines >= 0) metricsData.setValue(QString("%1-%2-BlankLines").arg(newName).arg(i), data.blankLines);
+        data.sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[row], langName), -1).toInt();
+        data.lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[row], langName), -1).toInt();
+        data.linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[row], langName), -1).toInt();
+        data.commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[row], langName), -1).toInt();
+        data.commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[row], langName), -1).toInt();
+        data.blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[row], langName), -1).toInt();
 
-        metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[row]).arg(i));
-        metricsData.remove(QString("%1-%2-Lines").arg(projectNames[row]).arg(i));
-        metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[row]).arg(i));
-        metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[row]).arg(i));
-        metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[row]).arg(i));
-        metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[row]).arg(i));
+        if (data.sourceFiles >= 0) metricsData.setValue(QString("%1-%2-SourceFiles").arg(newName, langName), data.sourceFiles);
+        if (data.lines >= 0) metricsData.setValue(QString("%1-%2-Lines").arg(newName, langName), data.lines);
+        if (data.linesOfCode >= 0) metricsData.setValue(QString("%1-%2-LinesOfCode").arg(newName, langName), data.linesOfCode);
+        if (data.commentLines >= 0) metricsData.setValue(QString("%1-%2-CommentLines").arg(newName, langName), data.commentLines);
+        if (data.commentWords >= 0) metricsData.setValue(QString("%1-%2-CommentWords").arg(newName, langName), data.commentWords);
+        if (data.blankLines >= 0) metricsData.setValue(QString("%1-%2-BlankLines").arg(newName, langName), data.blankLines);
+
+        metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[row], langName));
+        metricsData.remove(QString("%1-%2-Lines").arg(projectNames[row], langName));
+        metricsData.remove(QString("%1-%2-LinesOfCode").arg(projectNames[row], langName));
+        metricsData.remove(QString("%1-%2-CommentLines").arg(projectNames[row], langName));
+        metricsData.remove(QString("%1-%2-CommentWords").arg(projectNames[row], langName));
+        metricsData.remove(QString("%1-%2-BlankLines").arg(projectNames[row], langName));
     }
 
     projectNames[row] = newName;
@@ -348,7 +354,7 @@ void MainWindow::count()
 
     // Resets all metrics data
     ui->progressBar->setValue(0);
-    memset(&dataCurrent, 0, sizeof(MetricsData) * Language::NONE);
+    memset(&dataCurrent, 0, sizeof(MetricsData) * Language::COUNT);
 
     for (int i = 0; i < ui->metricsTable->rowCount(); i++)
     {
@@ -357,7 +363,7 @@ void MainWindow::count()
         for (int j = 1; j < ui->metricsTable->columnCount(); j++)
         {
             ui->metricsTable->item(i, j)->setText(QString());
-            if (i != Language::NONE) ui->metricsTable->item(i, j)->setBackground(QBrush(QColor("White")));
+            if (i != Language::COUNT) ui->metricsTable->item(i, j)->setBackground(QBrush(QColor("White")));
         }
     }
 
@@ -380,13 +386,13 @@ void MainWindow::count()
             {
                 int row = getMetricsTableIndex(langType);
 
-                filesList.append(SourceFile(path, langType));
+                filesList.append(SourceFile{path, langType});
                 dataCurrent[langType].sourceFiles++;
                 dataTotal.sourceFiles++;
                 ui->metricsTable->showRow(row);
-                ui->metricsTable->showRow(Language::NONE);
+                ui->metricsTable->showRow(Language::COUNT);
                 ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[langType].sourceFiles);
-                ui->metricsTable->item(Language::NONE, 1)->setData(Qt::EditRole, dataTotal.sourceFiles);
+                ui->metricsTable->item(Language::COUNT, 1)->setData(Qt::EditRole, dataTotal.sourceFiles);
                 QApplication::processEvents();
             }
         };
@@ -414,9 +420,9 @@ void MainWindow::count()
     // Counts source lines
     for (int i = 0, files = 0; i < filesList.size(); i++)
     {
-        Language::type_t lang = filesList[i].lang;
+        Language::type_t langType = filesList[i].langType;
 
-        if (lang != Language::NONE)
+        if (langType != Language::NONE)
         {
             QFile file(filesList[i].filename);
             file.open(QIODevice::ReadOnly);
@@ -435,13 +441,13 @@ void MainWindow::count()
                 QString line = in.readLine();
                 cursorState = isThereCommentLine ? MULTIPLE_COMMENT : NONE;
 
-                dataCurrent[lang].lines++;
+                dataCurrent[langType].lines++;
                 dataTotal.lines++;
 
                 // Blank line
                 if (line.simplified().isEmpty())
                 {
-                    dataCurrent[lang].blankLines++;
+                    dataCurrent[langType].blankLines++;
                     dataTotal.blankLines++;
                 }
 
@@ -450,21 +456,21 @@ void MainWindow::count()
                 {
                     if (cursorState == NONE)
                     {
-                        for (int k = 0; langList[lang].singleComment[k] || langList[lang].multipleCommentStart[k]; k++)
+                        for (int k = 0; langList[langType].singleComment[k] || langList[langType].multipleCommentStart[k]; k++)
                         {
                             // Single Comment
-                            if (langList[lang].singleComment[k] && checkForKeyword(line, j, langList[lang].singleComment[k]))
+                            if (langList[langType].singleComment[k] && checkForKeyword(line, j, langList[langType].singleComment[k]))
                             {
-                                j += strlen(langList[lang].singleComment[k]);
+                                j += strlen(langList[langType].singleComment[k]);
                                 cursorState = SINGLE_COMMENT;
                                 isThereCommentLine = true;
                                 break;
                             }
 
                             // Multiple comment - begin
-                            if (cursorState == NONE && langList[lang].multipleCommentStart[k] && checkForKeyword(line, j, langList[lang].multipleCommentStart[k]) && (lang != Language::RUBY || (j == 0 && !line[j + strlen(langList[lang].multipleCommentStart[k])].isLetterOrNumber())))
+                            if (cursorState == NONE && langList[langType].multipleCommentStart[k] && checkForKeyword(line, j, langList[langType].multipleCommentStart[k]) && (langType != Language::RUBY || (j == 0 && !line[j + strlen(langList[langType].multipleCommentStart[k])].isLetterOrNumber())))
                             {
-                                j += strlen(langList[lang].multipleCommentStart[k]);
+                                j += strlen(langList[langType].multipleCommentStart[k]);
                                 cursorState = MULTIPLE_COMMENT;
                                 isThereCommentLine = true;
                                 break;
@@ -477,11 +483,11 @@ void MainWindow::count()
                     // Multiple comment - end
                     if (cursorState == MULTIPLE_COMMENT)
                     {
-                        for (int k = 0; langList[lang].multipleCommentEnd[k]; k++)
+                        for (int k = 0; langList[langType].multipleCommentEnd[k]; k++)
                         {
-                            if (checkForKeyword(line, j, langList[lang].multipleCommentEnd[k]) && (lang != Language::RUBY || (j == 0 && !line[j + strlen(langList[lang].multipleCommentEnd[k])].isLetterOrNumber())))
+                            if (checkForKeyword(line, j, langList[langType].multipleCommentEnd[k]) && (langType != Language::RUBY || (j == 0 && !line[j + strlen(langList[langType].multipleCommentEnd[k])].isLetterOrNumber())))
                             {
-                                j += strlen(langList[lang].multipleCommentEnd[k]);
+                                j += strlen(langList[langType].multipleCommentEnd[k]);
                                 cursorState = NONE;
                                 isThereCommentLine = true;
                                 break;
@@ -494,7 +500,7 @@ void MainWindow::count()
                     // Comment words
                     if ((cursorState == SINGLE_COMMENT || cursorState == MULTIPLE_COMMENT) && ((j == 0 && line[j].isLetter()) || (j > 0 && !line[j - 1].isLetter() && line[j].isLetter())))
                     {
-                        dataCurrent[lang].commentWords++;
+                        dataCurrent[langType].commentWords++;
                         dataTotal.commentWords++;
                     }
 
@@ -524,12 +530,12 @@ void MainWindow::count()
 
                 if (isThereCommentLine)
                 {
-                    dataCurrent[lang].commentLines++;
+                    dataCurrent[langType].commentLines++;
                     dataTotal.commentLines++;
                 }
                 if (isThereCodeLine)
                 {
-                    dataCurrent[lang].linesOfCode++;
+                    dataCurrent[langType].linesOfCode++;
                     dataTotal.linesOfCode++;
                 }
             }
@@ -539,19 +545,19 @@ void MainWindow::count()
             files++;
             ui->progressBar->setValue((float) files / filesList.size() * 100);
 
-            int row = getMetricsTableIndex(lang);
+            int row = getMetricsTableIndex(langType);
 
-            ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[lang].lines);
-            ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[lang].linesOfCode);
-            ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[lang].commentLines);
-            ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[lang].commentWords);
-            ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[lang].blankLines);
+            ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[langType].lines);
+            ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[langType].linesOfCode);
+            ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[langType].commentLines);
+            ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[langType].commentWords);
+            ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[langType].blankLines);
 
-            ui->metricsTable->item(Language::NONE, 2)->setData(Qt::EditRole, dataTotal.lines);
-            ui->metricsTable->item(Language::NONE, 3)->setData(Qt::EditRole, dataTotal.linesOfCode);
-            ui->metricsTable->item(Language::NONE, 4)->setData(Qt::EditRole, dataTotal.commentLines);
-            ui->metricsTable->item(Language::NONE, 5)->setData(Qt::EditRole, dataTotal.commentWords);
-            ui->metricsTable->item(Language::NONE, 6)->setData(Qt::EditRole, dataTotal.blankLines);
+            ui->metricsTable->item(Language::COUNT, 2)->setData(Qt::EditRole, dataTotal.lines);
+            ui->metricsTable->item(Language::COUNT, 3)->setData(Qt::EditRole, dataTotal.linesOfCode);
+            ui->metricsTable->item(Language::COUNT, 4)->setData(Qt::EditRole, dataTotal.commentLines);
+            ui->metricsTable->item(Language::COUNT, 5)->setData(Qt::EditRole, dataTotal.commentWords);
+            ui->metricsTable->item(Language::COUNT, 6)->setData(Qt::EditRole, dataTotal.blankLines);
         }
 
         QApplication::processEvents();
@@ -563,21 +569,24 @@ void MainWindow::count()
     if (ui->projectsList->selectionModel()->isSelected(ui->projectsList->currentIndex()))
     {
         // Reads/saves previous metrics
-        for (int i = 0; i < Language::NONE; i++)
+        for (int i = 0; i < Language::COUNT; i++)
         {
-            dataPrevious[i].sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i), dataCurrent[i].sourceFiles).toInt();
-            dataPrevious[i].lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].lines).toInt();
-            dataPrevious[i].linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i), dataCurrent[i].linesOfCode).toInt();
-            dataPrevious[i].commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentLines).toInt();
-            dataPrevious[i].commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentWords).toInt();
-            dataPrevious[i].blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].blankLines).toInt();
+            QString langName = langList[i].name;
+            langName.replace('/', ' ');
 
-            metricsData.setValue(QString("%1-%2-SourceFiles").arg(projectNames[currentRow]).arg(i), dataCurrent[i].sourceFiles);
-            metricsData.setValue(QString("%1-%2-Lines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].lines);
-            metricsData.setValue(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow]).arg(i), dataCurrent[i].linesOfCode);
-            metricsData.setValue(QString("%1-%2-CommentLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentLines);
-            metricsData.setValue(QString("%1-%2-CommentWords").arg(projectNames[currentRow]).arg(i), dataCurrent[i].commentWords);
-            metricsData.setValue(QString("%1-%2-BlankLines").arg(projectNames[currentRow]).arg(i), dataCurrent[i].blankLines);
+            dataPrevious[i].sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName), dataCurrent[i].sourceFiles).toInt();
+            dataPrevious[i].lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[currentRow], langName), dataCurrent[i].lines).toInt();
+            dataPrevious[i].linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow], langName), dataCurrent[i].linesOfCode).toInt();
+            dataPrevious[i].commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[currentRow], langName), dataCurrent[i].commentLines).toInt();
+            dataPrevious[i].commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[currentRow], langName), dataCurrent[i].commentWords).toInt();
+            dataPrevious[i].blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[currentRow], langName), dataCurrent[i].blankLines).toInt();
+
+            metricsData.setValue(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName), dataCurrent[i].sourceFiles);
+            metricsData.setValue(QString("%1-%2-Lines").arg(projectNames[currentRow], langName), dataCurrent[i].lines);
+            metricsData.setValue(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow], langName), dataCurrent[i].linesOfCode);
+            metricsData.setValue(QString("%1-%2-CommentLines").arg(projectNames[currentRow], langName), dataCurrent[i].commentLines);
+            metricsData.setValue(QString("%1-%2-CommentWords").arg(projectNames[currentRow], langName), dataCurrent[i].commentWords);
+            metricsData.setValue(QString("%1-%2-BlankLines").arg(projectNames[currentRow], langName), dataCurrent[i].blankLines);
         }
 
         updateMetricsDifference();
@@ -606,45 +615,45 @@ void MainWindow::sort(int column)
 {
     QString totalData[NUMBER_OF_METRICS];
 
-    // Doesn't allow sorting if there're no shown rows.
-    bool flag = false;
-
+    // Sorts only if there's at least one shown row.
     for (int i = 0; i < ui->metricsTable->rowCount(); i++)
+    {
         if (!ui->metricsTable->isRowHidden(i))
-            flag = true;
+        {
+            // Removes metrics differences for accurate sorting.
+            for (int i = 0; i < Language::COUNT; i++)
+            {
+                int row = getMetricsTableIndex((Language::type_t) i);
 
-    if (!flag) return;
+                ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[i].sourceFiles);
+                ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[i].lines);
+                ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[i].linesOfCode);
+                ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[i].commentLines);
+                ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[i].commentWords);
+                ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[i].blankLines);
+            }
 
-    // Removes metrics differences for accurate sorting.
-    for (int i = 0; i < Language::NONE; i++)
-    {
-        int row = getMetricsTableIndex((Language::type_t) i);
+            for (int i = 0; i < NUMBER_OF_METRICS; i++)
+                totalData[i] = ui->metricsTable->item(Language::COUNT, i)->text();
 
-        ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[i].sourceFiles);
-        ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[i].lines);
-        ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[i].linesOfCode);
-        ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[i].commentLines);
-        ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[i].commentWords);
-        ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[i].blankLines);
+            ui->metricsTable->removeRow(Language::COUNT);
+            ui->metricsTable->sortByColumn(column, ui->metricsTable->horizontalHeader()->sortIndicatorOrder());
+            ui->metricsTable->insertRow(Language::COUNT);
+
+            for (int i = 0; i < NUMBER_OF_METRICS; i++)
+            {
+                QTableWidgetItem* totalItem = new QTableWidgetItem();
+                totalItem->setText(totalData[i]);
+                totalItem->setBackground(QBrush(QColor(240, 240, 240)));
+                if (i) totalItem->setTextAlignment(Qt::AlignCenter);
+                ui->metricsTable->setItem(Language::COUNT, i, totalItem);
+            }
+
+            if (!counting) updateMetricsDifference();
+
+            return;
+        }
     }
-
-    for (int i = 0; i < NUMBER_OF_METRICS; i++)
-        totalData[i] = ui->metricsTable->item(Language::NONE, i)->text();
-
-    ui->metricsTable->removeRow(Language::NONE);
-    ui->metricsTable->sortByColumn(column, ui->metricsTable->horizontalHeader()->sortIndicatorOrder());
-    ui->metricsTable->insertRow(Language::NONE);
-
-    for (int i = 0; i < NUMBER_OF_METRICS; i++)
-    {
-        QTableWidgetItem* totalItem = new QTableWidgetItem();
-        totalItem->setText(totalData[i]);
-        totalItem->setBackground(QBrush(QColor(240, 240, 240)));
-        if (i) totalItem->setTextAlignment(Qt::AlignCenter);
-        ui->metricsTable->setItem(Language::NONE, i, totalItem);
-    }
-
-    if (!counting) updateMetricsDifference();
 }
 
 /*
@@ -668,8 +677,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
     QVariantList hSizes, vSizes;
 
-    for (auto &e : ui->horizontalSplitter->sizes()) hSizes.push_back(e);
-    for (auto &e : ui->verticalSplitter->sizes()) vSizes.push_back(e);
+    for (auto &size : ui->horizontalSplitter->sizes()) hSizes.push_back(size);
+    for (auto &size : ui->verticalSplitter->sizes()) vSizes.push_back(size);
 
     settings.setValue("HorizontalSplitter", hSizes);
     settings.setValue("VerticalSplitter", vSizes);
@@ -704,7 +713,7 @@ MainWindow::updateMetricsDifference
 */
 void MainWindow::updateMetricsDifference() const
 {
-    for (int i = 0; i < Language::NONE; i++)
+    for (int i = 0; i < Language::COUNT; i++)
     {
         int row = getMetricsTableIndex(static_cast<Language::type_t>(i));
 
@@ -768,7 +777,7 @@ MainWindow::getLanguageType
 */
 Language::type_t MainWindow::getLanguageType(const QString &ext) const
 {
-    for (int i = 0; i < Language::NONE; i++)
+    for (int i = 0; i < Language::COUNT; i++)
         for (int j = 0; langList[i].ext[j]; j++)
             if (!ext.compare(langList[i].ext[j], Qt::CaseInsensitive))
                 return static_cast<Language::type_t>(i);

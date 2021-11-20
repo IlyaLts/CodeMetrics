@@ -5,34 +5,34 @@ A source code counter.
 | Supported Languages | Extensions |
 | --- | --- |
 | Assembly | .asm, .nasm, .s |
+| BASIC | .bas, .vb |
 | C | .c |
+| C# | .cs |
 | C++ | .cpp, .cc, .cxx, .c++, .inl, .ipp |
 | C/C++ Header | .h, .hh, .hpp, .h++, .hpp, .hxx |
-| Object-C | .m, .mm |
+| Clojure | .clj, .cljs, .cljc, .edn |
+| CoffeeScript | .coffee, .litcoffee |
 | D | .d |
-| Java | .java |
-| C# | .cs |
 | F# | .fs, .fsx |
-| Swift | .swift |
-| Lua | .lua |
+| GLSL | .vert, .tesc, .tese, .geom, .frag, .comp, .glsl, .glslv |
 | Go | .go |
+| Groovy | .groovy, .gvy, .gy, .gsh |
+| Haskell | .hs, .lhs |
+| HLSL | .hlsl |
+| Java | .java |
+| JavaScript | .js, .json |
+| Kotlin | .kt, .kts |
+| Lisp | .lisp |
+| Lua | .lua |
+| Object-C | .m, .mm |
+| Perl | .pl, .pm, .perl, .t, .pod |
+| Pascal | .pas, .p |
+| PHP | .php, .phtml, .php3, .php4, .php5, .phps |
+| Python | .py |
+| R | .r |
+| Ruby | .rb, .rbw |
 | Rust | .rs |
 | Scala | .scala |
-| Groovy | .groovy, .gvy, .gy, .gsh |
 | SQL | .sql |
-| Lisp | .lisp |
-| Python | .py |
-| Kotlin | .kt, .kts |
-| Clojure | .clj, .cljs, .cljc, .edn |
+| Swift | .swift |
 | TypeScript | .ts, .tsx |
-| CoffeeScript | .coffee, .litcoffee |
-| Haskell | .hs, .lhs |
-| Ruby | .rb, .rbw |
-| R | .r |
-| Perl | .pl, .pm, .perl, .t, .pod |
-| JavaScript | .js, .json |
-| PHP | .php, .phtml, .php3, .php4, .php5, .phps |
-| Pascal | .pas, .p |
-| GLSL | .vert, .tesc, .tese, .geom, .frag, .comp, .glsl, .glslv |
-| HLSL | .hlsl |
-| BASIC | .bas, .vb |

@@ -51,37 +51,38 @@ struct Language
     enum type_t
     {
         ASSEMBLY,
+        BASIC,
         C,
+        CSHARP,
         CPP,
         CHEADER,
-        OBJECTC,
+        CLOJURE,
+        COFFEESCRIPT,
         D,
-        JAVA,
-        CSHARP,
         FSHARP,
-        SWIFT,
+        GLSL,
         GO,
+        GROOVY,
+        HASKELL,
+        HLSL,
+        JAVA,
+        JAVASCRIPT,
+        KOTLIN,
+        LISP,
+        LUA,
+        OBJECTC,
+        PERL,
+        PASCAL,
+        PHP,
+        PYTHON,
+        R,
+        RUBY,
         RUST,
         SCALA,
-        GROOVY,
         SQL,
-        LUA,
-        LISP,
-        PYTHON,
-        KOTLIN,
-        CLOJURE,
+        SWIFT,
         TYPESCRIPT,
-        COFFEESCRIPT,
-        HASKELL,
-        RUBY,
-        R,
-        PERL,
-        JAVASCRIPT,
-        PHP,
-        PASCAL,
-        BASIC,
-        GLSL,
-        HLSL,
+        COUNT,
         NONE
     } type;
 
@@ -94,22 +95,18 @@ struct Language
 
 struct SourceFile
 {
-    SourceFile(const QString &filename, Language::type_t lang) : filename(filename), lang(lang) {}
-
     QString filename;
-    Language::type_t lang;
+    Language::type_t langType;
 };
 
 struct MetricsData
 {
-    MetricsData() : sourceFiles(0), lines(0), linesOfCode(0), commentLines(0), commentWords(0), blankLines(0) {}
-
-    int sourceFiles;
-    int lines;
-    int linesOfCode;
-    int commentLines;
-    int commentWords;
-    int blankLines;
+    int sourceFiles = 0;
+    int lines = 0;
+    int linesOfCode = 0;
+    int commentLines = 0;
+    int commentWords = 0;
+    int blankLines = 0;
 };
 
 /*
@@ -157,8 +154,8 @@ private:
     DirsFirstProxyModel *proxyModel;
     QStringList projectNames;
     QList<QStringList> projectPathList;
-    MetricsData dataCurrent[Language::NONE];
-    MetricsData dataPrevious[Language::NONE];
+    MetricsData dataCurrent[Language::COUNT];
+    MetricsData dataPrevious[Language::COUNT];
 
     ProjectsList *projectsList;
 };

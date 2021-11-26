@@ -147,7 +147,7 @@ private:
     Language::type_t getLanguageType(const QString &ext) const;
     int getMetricsTableIndex(Language::type_t index) const;
 
-    bool counting;
+    bool counting = false;
     Ui::MainWindow *ui;
     QStringListModel *projectsListModel;
     FileSelectorModel *fileSelectorModel;

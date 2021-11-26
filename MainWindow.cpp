@@ -341,15 +341,18 @@ MainWindow::count
 */
 void MainWindow::count()
 {
-    QList<SourceFile> filesList;
-    MetricsData dataTotal;
+    if (counting)
+    {
+        counting = false;
+        return;
+    }
 
     // Widgets are off
     ui->projectsList->setEnabled(false);
     ui->fileSelector->setEnabled(false);
     ui->addButton->setEnabled(false);
     ui->removeButton->setEnabled(false);
-    ui->countButton->setEnabled(false);
+    ui->countButton->setText("Stop");
     counting = true;
 
     // Resets all metrics data
@@ -369,6 +372,8 @@ void MainWindow::count()
 
     ui->progressBar->setFormat("Counting files...");
 
+    MetricsData dataTotal;
+    QList<SourceFile> filesList;
     QList<QString> pathList;
     fileSelectorModel->getPathList(pathList);
 
@@ -377,6 +382,7 @@ void MainWindow::count()
     {
         QFileInfo fileInfo(path);
         if (!fileInfo.exists()) continue;
+        if (!counting) break;
 
         auto AddPath = [&](const QString &path, const QString &ext)
         {
@@ -405,7 +411,7 @@ void MainWindow::count()
         {
             QDirIterator sourceDirectory(path, QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
-            while (sourceDirectory.hasNext())
+            while (sourceDirectory.hasNext() && counting)
             {
                 sourceDirectory.next();
 
@@ -418,7 +424,7 @@ void MainWindow::count()
     ui->progressBar->setFormat("%p%");
 
     // Counts source lines
-    for (int i = 0, files = 0; i < filesList.size(); i++)
+    for (int i = 0, files = 0; i < filesList.size() && counting; i++)
     {
         Language::type_t langType = filesList[i].langType;
 
@@ -563,46 +569,49 @@ void MainWindow::count()
         QApplication::processEvents();
     }
 
-    QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
-    int currentRow = ui->projectsList->currentIndex().row();
-
-    if (ui->projectsList->selectionModel()->isSelected(ui->projectsList->currentIndex()))
+    if (counting)
     {
-        // Reads/saves previous metrics
-        for (int i = 0; i < Language::COUNT; i++)
+        if (ui->projectsList->selectionModel()->isSelected(ui->projectsList->currentIndex()))
         {
-            QString langName = langList[i].name;
-            langName.replace('/', ' ');
+            QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
+            int currentRow = ui->projectsList->currentIndex().row();
 
-            dataPrevious[i].sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName), dataCurrent[i].sourceFiles).toInt();
-            dataPrevious[i].lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[currentRow], langName), dataCurrent[i].lines).toInt();
-            dataPrevious[i].linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow], langName), dataCurrent[i].linesOfCode).toInt();
-            dataPrevious[i].commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[currentRow], langName), dataCurrent[i].commentLines).toInt();
-            dataPrevious[i].commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[currentRow], langName), dataCurrent[i].commentWords).toInt();
-            dataPrevious[i].blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[currentRow], langName), dataCurrent[i].blankLines).toInt();
+            // Reads/saves previous metrics
+            for (int i = 0; i < Language::COUNT; i++)
+            {
+                QString langName = langList[i].name;
+                langName.replace('/', ' ');
 
-            metricsData.setValue(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName), dataCurrent[i].sourceFiles);
-            metricsData.setValue(QString("%1-%2-Lines").arg(projectNames[currentRow], langName), dataCurrent[i].lines);
-            metricsData.setValue(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow], langName), dataCurrent[i].linesOfCode);
-            metricsData.setValue(QString("%1-%2-CommentLines").arg(projectNames[currentRow], langName), dataCurrent[i].commentLines);
-            metricsData.setValue(QString("%1-%2-CommentWords").arg(projectNames[currentRow], langName), dataCurrent[i].commentWords);
-            metricsData.setValue(QString("%1-%2-BlankLines").arg(projectNames[currentRow], langName), dataCurrent[i].blankLines);
+                dataPrevious[i].sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName), dataCurrent[i].sourceFiles).toInt();
+                dataPrevious[i].lines = metricsData.value(QString("%1-%2-Lines").arg(projectNames[currentRow], langName), dataCurrent[i].lines).toInt();
+                dataPrevious[i].linesOfCode = metricsData.value(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow], langName), dataCurrent[i].linesOfCode).toInt();
+                dataPrevious[i].commentLines = metricsData.value(QString("%1-%2-CommentLines").arg(projectNames[currentRow], langName), dataCurrent[i].commentLines).toInt();
+                dataPrevious[i].commentWords = metricsData.value(QString("%1-%2-CommentWords").arg(projectNames[currentRow], langName), dataCurrent[i].commentWords).toInt();
+                dataPrevious[i].blankLines = metricsData.value(QString("%1-%2-BlankLines").arg(projectNames[currentRow], langName), dataCurrent[i].blankLines).toInt();
+
+                metricsData.setValue(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName), dataCurrent[i].sourceFiles);
+                metricsData.setValue(QString("%1-%2-Lines").arg(projectNames[currentRow], langName), dataCurrent[i].lines);
+                metricsData.setValue(QString("%1-%2-LinesOfCode").arg(projectNames[currentRow], langName), dataCurrent[i].linesOfCode);
+                metricsData.setValue(QString("%1-%2-CommentLines").arg(projectNames[currentRow], langName), dataCurrent[i].commentLines);
+                metricsData.setValue(QString("%1-%2-CommentWords").arg(projectNames[currentRow], langName), dataCurrent[i].commentWords);
+                metricsData.setValue(QString("%1-%2-BlankLines").arg(projectNames[currentRow], langName), dataCurrent[i].blankLines);
+            }
+
+            updateMetricsDifference();
         }
 
-        updateMetricsDifference();
+        if (!filesList.isEmpty())
+            ui->progressBar->setFormat("Done.");
+        else
+            ui->progressBar->setFormat("No source files have been found!");
     }
-
-    if (!filesList.isEmpty())
-        ui->progressBar->setFormat("Done.");
-    else
-        ui->progressBar->setFormat("No source files have been found!");
 
     // Widgets are on
     ui->projectsList->setEnabled(true);
     ui->fileSelector->setEnabled(true);
     ui->addButton->setEnabled(true);
     ui->removeButton->setEnabled(true);
-    ui->countButton->setEnabled(true);
+    ui->countButton->setText("Count");
     counting = false;
 }
 
@@ -621,35 +630,35 @@ void MainWindow::sort(int column)
         if (!ui->metricsTable->isRowHidden(i))
         {
             // Removes metrics differences for accurate sorting.
-            for (int i = 0; i < Language::COUNT; i++)
+            for (int j = 0; j < Language::COUNT; j++)
             {
-                int row = getMetricsTableIndex((Language::type_t) i);
+                int row = getMetricsTableIndex((Language::type_t) j);
 
-                ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[i].sourceFiles);
-                ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[i].lines);
-                ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[i].linesOfCode);
-                ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[i].commentLines);
-                ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[i].commentWords);
-                ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[i].blankLines);
+                ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[j].sourceFiles);
+                ui->metricsTable->item(row, 2)->setData(Qt::EditRole, dataCurrent[j].lines);
+                ui->metricsTable->item(row, 3)->setData(Qt::EditRole, dataCurrent[j].linesOfCode);
+                ui->metricsTable->item(row, 4)->setData(Qt::EditRole, dataCurrent[j].commentLines);
+                ui->metricsTable->item(row, 5)->setData(Qt::EditRole, dataCurrent[j].commentWords);
+                ui->metricsTable->item(row, 6)->setData(Qt::EditRole, dataCurrent[j].blankLines);
             }
 
-            for (int i = 0; i < NUMBER_OF_METRICS; i++)
-                totalData[i] = ui->metricsTable->item(Language::COUNT, i)->text();
+            for (int j = 0; j < NUMBER_OF_METRICS; j++)
+                totalData[j] = ui->metricsTable->item(Language::COUNT, j)->text();
 
             ui->metricsTable->removeRow(Language::COUNT);
             ui->metricsTable->sortByColumn(column, ui->metricsTable->horizontalHeader()->sortIndicatorOrder());
             ui->metricsTable->insertRow(Language::COUNT);
 
-            for (int i = 0; i < NUMBER_OF_METRICS; i++)
+            for (int j = 0; j < NUMBER_OF_METRICS; j++)
             {
                 QTableWidgetItem* totalItem = new QTableWidgetItem();
-                totalItem->setText(totalData[i]);
+                totalItem->setText(totalData[j]);
                 totalItem->setBackground(QBrush(QColor(240, 240, 240)));
-                if (i) totalItem->setTextAlignment(Qt::AlignCenter);
-                ui->metricsTable->setItem(Language::COUNT, i, totalItem);
+                if (j) totalItem->setTextAlignment(Qt::AlignCenter);
+                ui->metricsTable->setItem(Language::COUNT, j, totalItem);
             }
 
-            if (!counting) updateMetricsDifference();
+            if (!counting && ui->progressBar->format() == "Done") updateMetricsDifference();
 
             return;
         }
@@ -661,8 +670,10 @@ void MainWindow::sort(int column)
 MainWindow::resizeEvent
 ===================
 */
-void MainWindow::resizeEvent(QResizeEvent *)
+void MainWindow::resizeEvent(QResizeEvent *event)
 {
+    Q_UNUSED(event);
+
     repaint();
     QApplication::processEvents();
 }

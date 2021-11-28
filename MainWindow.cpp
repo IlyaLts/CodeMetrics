@@ -344,6 +344,7 @@ void MainWindow::count()
     if (counting)
     {
         counting = false;
+        canUpdateDiff = false;
         return;
     }
 
@@ -604,6 +605,8 @@ void MainWindow::count()
             ui->progressBar->setFormat("Done.");
         else
             ui->progressBar->setFormat("No source files have been found!");
+
+        canUpdateDiff = true;
     }
 
     // Widgets are on
@@ -658,7 +661,7 @@ void MainWindow::sort(int column)
                 ui->metricsTable->setItem(Language::COUNT, j, totalItem);
             }
 
-            if (!counting && ui->progressBar->format() == "Done") updateMetricsDifference();
+            if (!counting && canUpdateDiff) updateMetricsDifference();
 
             return;
         }

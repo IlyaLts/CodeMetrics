@@ -148,6 +148,7 @@ private:
     int getMetricsTableIndex(Language::type_t index) const;
 
     bool counting = false;
+    bool canUpdateDiff = false;
     Ui::MainWindow *ui;
     QStringListModel *projectsListModel;
     FileSelectorModel *fileSelectorModel;

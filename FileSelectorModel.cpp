@@ -90,9 +90,9 @@ bool FileSelectorModel::setData(const QModelIndex &index, const QVariant &value,
             if (!allChildren.isEmpty()) emit dataChanged(allChildren[0], allChildren[allChildren.size() - 1]);
         }
 
-        // Sets parent checkboxes partially checked, checked, or unchecked depending on their children's checkboxes.
         QModelIndex parent = index.parent();
 
+        // Sets parent checkboxes partially checked, checked, or unchecked depending on their children's checkboxes.
         while (parent.isValid())
         {
             QModelIndexList children;

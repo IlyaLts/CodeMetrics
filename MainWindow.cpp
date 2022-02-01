@@ -475,7 +475,7 @@ void MainWindow::count()
                             }
 
                             // Multiple comment - begin
-                            if (cursorState == NONE && langList[langType].multipleCommentStart[k] && checkForKeyword(line, j, langList[langType].multipleCommentStart[k]) && (langType != Language::RUBY || (j == 0 && !line[j + strlen(langList[langType].multipleCommentStart[k])].isLetterOrNumber())))
+                            if (langList[langType].multipleCommentStart[k] && checkForKeyword(line, j, langList[langType].multipleCommentStart[k]) && (langType != Language::RUBY || (j == 0 && !line[j + strlen(langList[langType].multipleCommentStart[k])].isLetterOrNumber())))
                             {
                                 j += strlen(langList[langType].multipleCommentStart[k]);
                                 cursorState = MULTIPLE_COMMENT;
@@ -577,10 +577,12 @@ void MainWindow::count()
             QSettings metricsData(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + METRICS_FILENAME, QSettings::IniFormat);
             int currentRow = ui->projectsList->currentIndex().row();
 
-            // Reads/saves previous metrics
+            // Loads previous metrics and updates them with new ones
             for (int i = 0; i < Language::COUNT; i++)
             {
-                QString langName = langList[i].name;
+                QString langName(langList[i].name);
+
+                // Gets rid of backslashes as QSettings always treats backslash as a special character and provides no API for reading or writing such entries.
                 langName.replace('/', ' ');
 
                 dataPrevious[i].sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName), dataCurrent[i].sourceFiles).toInt();

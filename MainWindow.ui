@@ -418,7 +418,7 @@
   <customwidget>
    <class>ProjectsList</class>
    <extends>QListView</extends>
-   <header>projectslist.h</header>
+   <header>ProjectsList.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

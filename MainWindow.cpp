@@ -154,8 +154,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->removeButton, SIGNAL(clicked()), SLOT(removeProject()));
     connect(ui->countButton, SIGNAL(clicked()), SLOT(count()));
     connect(ui->metricsTable->horizontalHeader(), SIGNAL(sectionClicked(int)), SLOT(sort(int)));
-    connect(ui->projectsList->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), SLOT(projectClicked(QItemSelection, QItemSelection)));
-    connect(ui->projectsList->model(), SIGNAL(dataChanged(QModelIndex, QModelIndex, QList<int>)), SLOT(projectNameChanged(QModelIndex)));
+    connect(ui->projectsList->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(projectClicked(QItemSelection,QItemSelection)));
+    connect(ui->projectsList->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)), SLOT(projectNameChanged(QModelIndex)));
     connect(ui->projectsList, SIGNAL(deletePressed()), SLOT(removeProject()));
 }
 

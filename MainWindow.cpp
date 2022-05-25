@@ -150,6 +150,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     for (auto &name : projectNames) projectPathList.push_back(projects.value(name).toStringList());
     projectsListModel->setStringList(projectNames);
 
+// Fixes headers not displaying horizontal border for Windows.
+#ifdef Q_OS_WIN
+    ui->fileSelector->header()->setFrameStyle(QFrame::HLine);
+    ui->fileSelector->header()->setStyleSheet("QFrame {background-color: #D8D8D8;}");
+    ui->metricsTable->horizontalHeader()->setFrameStyle(QFrame::HLine);
+    ui->metricsTable->horizontalHeader()->setStyleSheet("QFrame {background-color: #D8D8D8;}");
+#endif
+
     connect(ui->addButton, SIGNAL(clicked()), SLOT(addProject()));
     connect(ui->removeButton, SIGNAL(clicked()), SLOT(removeProject()));
     connect(ui->countButton, SIGNAL(clicked()), SLOT(count()));
@@ -387,20 +395,27 @@ void MainWindow::count()
 
         auto AddPath = [&](const QString &path, const QString &ext)
         {
-            Language::type_t langType = getLanguageType(ext);
-
-            if (langType != Language::NONE)
+            for (int i = 0; i < Language::COUNT; i++)
             {
-                int row = getMetricsTableIndex(langType);
+                for (int j = 0; langList[i].ext[j]; j++)
+                {
+                    if (!ext.compare(langList[i].ext[j], Qt::CaseInsensitive))
+                    {
+                        Language::type_t langType = static_cast<Language::type_t>(i);
 
-                filesList.append(SourceFile{path, langType});
-                dataCurrent[langType].sourceFiles++;
-                dataTotal.sourceFiles++;
-                ui->metricsTable->showRow(row);
-                ui->metricsTable->showRow(Language::COUNT);
-                ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[langType].sourceFiles);
-                ui->metricsTable->item(Language::COUNT, 1)->setData(Qt::EditRole, dataTotal.sourceFiles);
-                QApplication::processEvents();
+                        int row = getMetricsTableIndex(langType);
+
+                        filesList.append(SourceFile{path, langType});
+                        dataCurrent[langType].sourceFiles++;
+                        dataTotal.sourceFiles++;
+                        ui->metricsTable->showRow(row);
+                        ui->metricsTable->showRow(Language::COUNT);
+                        ui->metricsTable->item(row, 1)->setData(Qt::EditRole, dataCurrent[langType].sourceFiles);
+                        ui->metricsTable->item(Language::COUNT, 1)->setData(Qt::EditRole, dataTotal.sourceFiles);
+                        QApplication::processEvents();
+                        return;
+                    }
+                }
             }
         };
 
@@ -784,21 +799,6 @@ bool MainWindow::checkForKeyword(const QString &line, int index, const char *key
             return false;
 
     return true;
-}
-
-/*
-===================
-MainWindow::getLanguageType
-===================
-*/
-Language::type_t MainWindow::getLanguageType(const QString &ext) const
-{
-    for (int i = 0; i < Language::COUNT; i++)
-        for (int j = 0; langList[i].ext[j]; j++)
-            if (!ext.compare(langList[i].ext[j], Qt::CaseInsensitive))
-                return static_cast<Language::type_t>(i);
-
-    return Language::NONE;
 }
 
 /*

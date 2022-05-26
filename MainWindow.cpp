@@ -152,10 +152,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 // Fixes headers not displaying horizontal border for Windows.
 #ifdef Q_OS_WIN
-    ui->fileSelector->header()->setFrameStyle(QFrame::HLine);
-    ui->fileSelector->header()->setStyleSheet("QFrame {background-color: #D8D8D8;}");
-    ui->metricsTable->horizontalHeader()->setFrameStyle(QFrame::HLine);
-    ui->metricsTable->horizontalHeader()->setStyleSheet("QFrame {background-color: #D8D8D8;}");
+    ui->fileSelector->header()->setStyleSheet("QHeaderView::section {"
+                                              "padding-top: 4px;"
+                                              "padding-bottom: -4px;"
+                                              "padding-left: 4px;}");
+
+    setStyleSheet("QHeaderView::section {"
+                  "border-top:0px solid #D8D8D8;"
+                  "border-left:0px solid #D8D8D8;"
+                  "border-right:1px solid #D8D8D8;"
+                  "border-bottom: 1px solid #D8D8D8;"
+                  "background-color: #FAFAFA;}");
 #endif
 
     connect(ui->addButton, SIGNAL(clicked()), SLOT(addProject()));

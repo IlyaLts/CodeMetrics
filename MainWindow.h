@@ -133,6 +133,7 @@ public Q_SLOTS:
     void projectNameChanged(const QModelIndex &index);
     void count();
     void sort(int column);
+    void scrollToCenter();
 
 protected:
 
@@ -149,6 +150,7 @@ private:
 
     bool counting = false;
     bool canUpdateDiff = false;
+    bool scrollable = false;
     Ui::MainWindow *ui;
     QStringListModel *projectsListModel;
     FileSelectorModel *fileSelectorModel;

@@ -172,6 +172,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->projectsList->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(projectClicked(QItemSelection,QItemSelection)));
     connect(ui->projectsList->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)), SLOT(projectNameChanged(QModelIndex)));
     connect(ui->projectsList, SIGNAL(deletePressed()), SLOT(removeProject()));
+    connect(fileSelectorModel, SIGNAL(directoryLoaded(QString)), SLOT(scrollToCenter()));
+    connect(ui->fileSelector, &QTreeView::expanded, [=](){ scrollable = false; });
 }
 
 /*
@@ -293,6 +295,9 @@ void MainWindow::projectClicked(const QItemSelection &selected, const QItemSelec
             curIndex = curIndex.parent();
         }
     }
+
+    scrollable = true;
+    scrollToCenter();
 }
 
 /*
@@ -690,6 +695,19 @@ void MainWindow::sort(int column)
             return;
         }
     }
+}
+
+/*
+===================
+MainWindow::scrollToCenter
+===================
+*/
+void MainWindow::scrollToCenter()
+{
+    if (!scrollable || ui->projectsList->currentIndex().row() < 0 || projectPathList[ui->projectsList->currentIndex().row()].isEmpty())
+        return;
+
+    ui->fileSelector->scrollTo(proxyModel->mapFromSource(fileSelectorModel->index(projectPathList[ui->projectsList->currentIndex().row()][0])), QAbstractItemView::PositionAtCenter);
 }
 
 /*

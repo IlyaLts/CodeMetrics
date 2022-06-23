@@ -205,10 +205,7 @@ void MainWindow::addProject()
 
     projectNames.push_back(newName);
     projectPathList.push_back(pathList);
-
-    QStringList stringList(projectsListModel->stringList());
-    stringList.push_back(newName);
-    projectsListModel->setStringList(stringList);
+    projectsListModel->setStringList(projectNames);
 
     // Avoids reloading a newly added project as it's already loaded.
     ui->projectsList->selectionModel()->blockSignals(true);

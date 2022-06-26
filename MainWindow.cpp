@@ -233,7 +233,7 @@ void MainWindow::removeProject()
         // Removes project metrics
         for (int i = 0; i < Language::COUNT; i++)
         {
-            QString langName = langList[i].name;
+            QString langName(langList[i].name);
             langName.replace('/', ' ');
 
             metricsData.remove(QString("%1-%2-SourceFiles").arg(projectNames[currentRow], langName));
@@ -304,13 +304,13 @@ MainWindow::projectNameChanged
 */
 void MainWindow::projectNameChanged(const QModelIndex &index)
 {
-    QString newName = index.data(Qt::DisplayRole).toString();
+    QString newName(index.data(Qt::DisplayRole).toString());
     newName.remove('/');
     newName.remove('\\');
     int row = index.row();
 
     // Sets its name back to original if there's the project name that already exists
-    if (newName.isEmpty() || projectNames.contains(newName, Qt::CaseInsensitive))
+    if (newName.compare(projectNames[row], Qt::CaseInsensitive) && (newName.isEmpty() || projectNames.contains(newName, Qt::CaseInsensitive)))
     {
         ui->projectsList->model()->setData(index, projectNames[row], Qt::DisplayRole);
         return;
@@ -323,7 +323,7 @@ void MainWindow::projectNameChanged(const QModelIndex &index)
     {
         MetricsData data;
 
-        QString langName = langList[i].name;
+        QString langName(langList[i].name);
         langName.replace('/', ' ');
 
         data.sourceFiles = metricsData.value(QString("%1-%2-SourceFiles").arg(projectNames[row], langName), -1).toInt();

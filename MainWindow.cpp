@@ -183,6 +183,35 @@ MainWindow::~MainWindow
 */
 MainWindow::~MainWindow()
 {
+    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
+    QVariantList hSizes, vSizes;
+
+    for (auto &size : ui->horizontalSplitter->sizes()) hSizes.push_back(size);
+    for (auto &size : ui->verticalSplitter->sizes()) vSizes.push_back(size);
+
+    settings.setValue("HorizontalSplitter", hSizes);
+    settings.setValue("VerticalSplitter", vSizes);
+    settings.setValue("Fullscreen", isMaximized());
+
+    if (!isMaximized())
+    {
+        settings.setValue("Width", size().width());
+        settings.setValue("Height", size().height());
+    }
+
+    QSettings projects(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + PROJECTS_FILENAME, QSettings::IniFormat);
+    projects.clear();
+
+    if (!ui->projectsList->selectionModel()->selectedIndexes().isEmpty())
+    {
+        QStringList pathList;
+        fileSelectorModel->getPathList(pathList);
+        projectPathList[ui->projectsList->currentIndex().row()] = pathList;
+    }
+
+    for (int i = 0; i < projectNames.size(); i++)
+        projects.setValue(projectNames[i], projectPathList[i]);
+
     delete ui;
 }
 
@@ -718,45 +747,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
     repaint();
     QApplication::processEvents();
-}
-
-/*
-===================
-MainWindow::closeEvent
-===================
-*/
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + SETTINGS_FILENAME, QSettings::IniFormat);
-    QVariantList hSizes, vSizes;
-
-    for (auto &size : ui->horizontalSplitter->sizes()) hSizes.push_back(size);
-    for (auto &size : ui->verticalSplitter->sizes()) vSizes.push_back(size);
-
-    settings.setValue("HorizontalSplitter", hSizes);
-    settings.setValue("VerticalSplitter", vSizes);
-    settings.setValue("Fullscreen", isMaximized());
-
-    if (!isMaximized())
-    {
-        settings.setValue("Width", size().width());
-        settings.setValue("Height", size().height());
-    }
-
-    QSettings projects(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/" + PROJECTS_FILENAME, QSettings::IniFormat);
-    projects.clear();
-
-    if (!ui->projectsList->selectionModel()->selectedIndexes().isEmpty())
-    {
-        QStringList pathList;
-        fileSelectorModel->getPathList(pathList);
-        projectPathList[ui->projectsList->currentIndex().row()] = pathList;
-    }
-
-    for (int i = 0; i < projectNames.size(); i++)
-        projects.setValue(projectNames[i], projectPathList[i]);
-
-    event->accept();
 }
 
 /*

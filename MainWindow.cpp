@@ -139,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         for (int j = 1; j < NUMBER_OF_METRICS; j++)
         {
             QTableWidgetItem* newItem = new QTableWidgetItem();
-            newItem->setTextAlignment(Qt::AlignCenter);
+            newItem->setTextAlignment(Qt::Alignment(Qt::AlignCenter));
             if (i == Language::COUNT) newItem->setBackground(QBrush(QColor(240, 240, 240)));
             ui->metricsTable->setItem(i, j, newItem);
         }
@@ -173,7 +173,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->projectsList->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)), SLOT(projectNameChanged(QModelIndex)));
     connect(ui->projectsList, SIGNAL(deletePressed()), SLOT(removeProject()));
     connect(fileSelectorModel, SIGNAL(directoryLoaded(QString)), SLOT(scrollToCenter()));
-    connect(ui->fileSelector, &QTreeView::expanded, [=](){ scrollable = false; });
+    connect(ui->fileSelector, &QTreeView::expanded, [this](){ scrollable = false; });
 }
 
 /*
@@ -712,7 +712,7 @@ void MainWindow::sort(int column)
                 QTableWidgetItem* totalItem = new QTableWidgetItem();
                 totalItem->setText(totalData[j]);
                 totalItem->setBackground(QBrush(QColor(240, 240, 240)));
-                if (j) totalItem->setTextAlignment(Qt::AlignCenter);
+                if (j) totalItem->setTextAlignment(Qt::Alignment(Qt::AlignCenter));
                 ui->metricsTable->setItem(Language::COUNT, j, totalItem);
             }
 

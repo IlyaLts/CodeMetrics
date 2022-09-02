@@ -206,7 +206,7 @@ MainWindow::~MainWindow()
     {
         QStringList pathList;
         fileSelectorModel->getPathList(pathList);
-        projectPathList[ui->projectsList->currentIndex().row()] = pathList;
+        projectPathList[ui->projectsList->selectionModel()->selectedIndexes()[0].row()] = pathList;
     }
 
     for (int i = 0; i < projectNames.size(); i++)
@@ -308,10 +308,10 @@ void MainWindow::projectClicked(const QItemSelection &selected, const QItemSelec
         projectPathList[index.row()] = pathList;
     }
 
-    fileSelectorModel->setChecked(projectPathList[ui->projectsList->currentIndex().row()]);
+    fileSelectorModel->setChecked(projectPathList[selected.indexes()[0].row()]);
 
     // Expands all directories with checked checkboxes
-    for (auto &path : projectPathList[ui->projectsList->currentIndex().row()])
+    for (auto &path : projectPathList[selected.indexes()[0].row()])
     {
         QModelIndex curIndex = fileSelectorModel->index(path).parent();
 
@@ -730,10 +730,12 @@ MainWindow::scrollToCenter
 */
 void MainWindow::scrollToCenter()
 {
-    if (!scrollable || ui->projectsList->currentIndex().row() < 0 || projectPathList[ui->projectsList->currentIndex().row()].isEmpty())
+    int row = ui->projectsList->selectionModel()->selectedIndexes().isEmpty() ? -1 : ui->projectsList->selectionModel()->selectedIndexes()[0].row();
+
+    if (!scrollable || row < 0 || projectPathList[row].isEmpty())
         return;
 
-    ui->fileSelector->scrollTo(proxyModel->mapFromSource(fileSelectorModel->index(projectPathList[ui->projectsList->currentIndex().row()][0])), QAbstractItemView::PositionAtCenter);
+    ui->fileSelector->scrollTo(proxyModel->mapFromSource(fileSelectorModel->index(projectPathList[row][0])), QAbstractItemView::PositionAtCenter);
 }
 
 /*

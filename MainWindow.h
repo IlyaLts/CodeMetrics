@@ -137,6 +137,7 @@ public Q_SLOTS:
 
 protected:
 
+    void closeEvent(QCloseEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
 
 private:

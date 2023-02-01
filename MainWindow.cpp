@@ -740,6 +740,17 @@ void MainWindow::scrollToCenter()
 
 /*
 ===================
+MainWindow::closeEvent
+===================
+*/
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    counting = false;
+    QMainWindow::closeEvent(event);
+}
+
+/*
+===================
 MainWindow::resizeEvent
 ===================
 */

@@ -1,8 +1,12 @@
 # Code Metrics #
 
-A source code counter.
+A source code counter for personal use.
 
-| Supported Languages | Extensions |
+![CodeMetrics](https://user-images.githubusercontent.com/5786770/208042766-2b729f25-bec2-4326-92af-86cc90619adc.png)
+
+## Language Support ##
+
+| Languages | Extensions |
 | --- | --- |
 | Assembly | .asm, .nasm, .s |
 | BASIC | .bas, .vb |

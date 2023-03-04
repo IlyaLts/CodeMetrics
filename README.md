@@ -1,6 +1,6 @@
 # Code Metrics #
 
-A source code counter for personal use.
+A source code counter for personal use that helps you measure your source code, such as the number of source files, lines, lines of code, comment lines, comment words, and blank lines. It also can compare the changes in these metrics since the last time you measured them or save your projects so you can easily access them later.
 
 ![CodeMetrics](https://user-images.githubusercontent.com/5786770/208042766-2b729f25-bec2-4326-92af-86cc90619adc.png)
 

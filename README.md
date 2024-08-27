@@ -40,3 +40,10 @@ A source code counter for personal use that helps you measure your source code, 
 | SQL | .sql |
 | Swift | .swift |
 | TypeScript | .ts, .tsx |
+
+## Building
+Requires Qt 6 or newer. Buildable with Qt Creator.
+
+## License
+CodeMetrics is licensed under the GPL-3.0 license, see LICENSE.txt for more information.
+

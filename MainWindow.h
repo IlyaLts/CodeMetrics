@@ -27,9 +27,9 @@
 #define PROJECTS_FILENAME "Projects.ini"
 #define METRICS_FILENAME "Metrics.ini"
 
-namespace Ui {
-class MainWindow;
-}
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
 class QTableWidgetItem;
 class QStringListModel;
@@ -37,53 +37,53 @@ class QItemSelection;
 class ProjectsList;
 class DirsFirstProxyModel;
 
-enum cursorState_t
+enum cursorState
 {
-    STRING_LITERAL,
-    CHARACTER_LITERAL,
-    SINGLE_COMMENT,
-    MULTIPLE_COMMENT,
-    NONE
+    None,
+    StringLiteral,
+    CharacterLiteral,
+    SingleLineComment,
+    MultiLineComment
 };
 
 struct Language
 {
-    enum type_t
+    enum Type
     {
-        ASSEMBLY,
-        BASIC,
+        Assembly,
+        Basic,
         C,
-        CSHARP,
+        CSharp,
         CPP,
-        CHEADER,
-        CLOJURE,
-        COFFEESCRIPT,
+        CHeader,
+        Clojure,
+        CoffeeScript,
         D,
-        FSHARP,
+        FSharp,
         GLSL,
-        GO,
-        GROOVY,
-        HASKELL,
+        Go,
+        Groovy,
+        Haskell,
         HLSL,
-        JAVA,
-        JAVASCRIPT,
-        KOTLIN,
-        LISP,
-        LUA,
-        OBJECTC,
+        Java,
+        JavaScript,
+        Kotlin,
+        Lisp,
+        Lua,
+        ObjectC,
         PERL,
-        PASCAL,
+        Pascal,
         PHP,
-        PYTHON,
+        Python,
         R,
-        RUBY,
-        RUST,
-        SCALA,
+        Ruby,
+        Rust,
+        Scala,
         SQL,
-        SWIFT,
-        TYPESCRIPT,
-        COUNT,
-        NONE
+        Swift,
+        TypeScript,
+        TypeCount,
+        None
     } type;
 
     const char *name;
@@ -96,7 +96,7 @@ struct Language
 struct SourceFile
 {
     QString filename;
-    Language::type_t langType;
+    Language::Type langType;
 };
 
 struct MetricsData
@@ -142,11 +142,12 @@ protected:
 
 private:
 
+    void addPath(MetricsData &dataTotal, QList<SourceFile> &filesList, const QString &path, const QString &ext);
     void updateMetricsDifference() const;
     void showDifference(QTableWidgetItem *item, int current, int previous) const;
     bool checkForKeyword(const QString &line, int index, const char *keyword) const;
-    Language::type_t getLanguageType(const QString &ext) const;
-    int getMetricsTableIndex(Language::type_t index) const;
+    Language::Type getLanguageType(const QString &ext) const;
+    int getMetricsTableIndex(Language::Type index) const;
 
     bool counting = false;
     bool canUpdateDiff = false;
@@ -157,8 +158,8 @@ private:
     DirsFirstProxyModel *proxyModel;
     QStringList projectNames;
     QList<QStringList> projectPathList;
-    MetricsData dataCurrent[Language::COUNT];
-    MetricsData dataPrevious[Language::COUNT];
+    MetricsData dataCurrent[Language::TypeCount];
+    MetricsData dataPrevious[Language::TypeCount];
 
     ProjectsList *projectsList;
 };

@@ -35,7 +35,7 @@ class DirsFirstProxyModel : public QSortFilterProxyModel
 
 public:
 
-    explicit DirsFirstProxyModel(QObject *parent = nullptr) : QSortFilterProxyModel(parent){};
+    explicit DirsFirstProxyModel(QObject *parent = nullptr) : QSortFilterProxyModel(parent){}
 
 protected:
 

@@ -30,8 +30,9 @@ void ProjectsList::mousePressEvent(QMouseEvent *event)
     QModelIndex item = indexAt(event->pos());
     QListView::mousePressEvent(event);
 
-    // Clears selection when a user clicks on an empty area
-    if (!item.isValid()) clearSelection();
+    // Clears the selection when a user clicks on an empty area
+    if (!item.isValid())
+        clearSelection();
 }
 
 /*

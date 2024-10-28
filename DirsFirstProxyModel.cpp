@@ -36,11 +36,11 @@ bool DirsFirstProxyModel::lessThan(const QModelIndex &left, const QModelIndex &r
         QFileInfo leftFileInfo = fileSystem->fileInfo(left);
         QFileInfo rightFileInfo = fileSystem->fileInfo(right);
 
-        // Sorts drives by their letter
+        // Sorts drives alphabetically by letter
         if (!left.parent().isValid() && !right.parent().isValid())
             return leftFileInfo.path().compare(rightFileInfo.path(), Qt::CaseInsensitive) < 0;
 
-        // Moves directories to the top
+        // Moves directories to the top of the list
         if (!leftFileInfo.isDir() && rightFileInfo.isDir())
             return false;
         else if (leftFileInfo.isDir() && !rightFileInfo.isDir())

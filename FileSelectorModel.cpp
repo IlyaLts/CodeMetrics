@@ -73,7 +73,8 @@ bool FileSelectorModel::setData(const QModelIndex &index, const QVariant &value,
                 partiallyCheckedList.remove(child);
             }
 
-            if (!allChildren.isEmpty()) emit dataChanged(allChildren[0], allChildren[allChildren.size() - 1]);
+            if (!allChildren.isEmpty())
+                emit dataChanged(allChildren[0], allChildren[allChildren.size() - 1]);
         }
         else if (value == Qt::Unchecked)
         {
@@ -87,12 +88,13 @@ bool FileSelectorModel::setData(const QModelIndex &index, const QVariant &value,
                 partiallyCheckedList.remove(child);
             }
 
-            if (!allChildren.isEmpty()) emit dataChanged(allChildren[0], allChildren[allChildren.size() - 1]);
+            if (!allChildren.isEmpty())
+                emit dataChanged(allChildren[0], allChildren[allChildren.size() - 1]);
         }
 
         QModelIndex parent = index.parent();
 
-        // Sets parent checkboxes partially checked, checked, or unchecked depending on their children's checkboxes.
+        // Sets the parent checkbox based on child checkbox states
         while (parent.isValid())
         {
             QModelIndexList children;
@@ -104,7 +106,7 @@ bool FileSelectorModel::setData(const QModelIndex &index, const QVariant &value,
 
             for (auto &child : children)
             {
-                 QVariant childValue = child.data(Qt::CheckStateRole);
+                QVariant childValue = child.data(Qt::CheckStateRole);
 
                 if (childValue == Qt::Checked)
                     hasChecked = true;
@@ -114,19 +116,19 @@ bool FileSelectorModel::setData(const QModelIndex &index, const QVariant &value,
                     hasUnchecked = true;
             }
 
-            // Partially checked.
+            // Partially checked
             if ((hasChecked && hasUnchecked) || hasPartiallyChecked || (hasChecked && canFetchMore(parent)))
             {
                 checkedList.remove(parent);
                 partiallyCheckedList.insert(parent);
             }
-            // Unchecked.
+            // Unchecked
             else if (!hasChecked && hasUnchecked)
             {
                 checkedList.remove(parent);
                 partiallyCheckedList.remove(parent);
             }
-            // Checked.
+            // Checked
             else if (hasChecked && !hasUnchecked)
             {
                 checkedList.insert(parent);
@@ -194,7 +196,7 @@ void FileSelectorModel::updateCheckboxes(const QString &path)
     QModelIndexList children;
     getChildren(children, parent);
 
-    // Sets children checkboxes checked if a parent checkbox is checked too.
+    // Sets child checkboxes checked when parent checkbox is checked
     if (parent.data(Qt::CheckStateRole) == Qt::Checked && !children.isEmpty())
     {
         for (auto &child : children)

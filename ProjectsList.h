@@ -35,7 +35,7 @@ class ProjectsList : public QListView
 
 public:
 
-    explicit ProjectsList(QWidget *parent = nullptr) : QListView(parent){};
+    explicit ProjectsList(QWidget *parent = nullptr) : QListView(parent){}
 
 Q_SIGNALS:
 
